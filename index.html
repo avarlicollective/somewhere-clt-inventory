@@ -7,261 +7,208 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --black:      #07070e;
-    --deep:       #0d0d1a;
-    --dark:       #111126;
-    --panel:      #181530;
-    --card:       #1c1840;
-    --border:     #2a1d5c;
-    --border-lit: #4a30a0;
-    --purple:     #5b1fa8;
-    --purple-mid: #8040d0;
-    --neon:       #ff2eee;
-    --neon-dim:   #aa1faa;
-    --lavender:   #cc88ff;
-    --white:      #ffffff;
-    --off-white:  #ede8ff;
-    --muted:      #6655aa;
-    --red:        #ff3355;
-    --orange:     #ff8800;
-    --yellow:     #ffd700;
-    --green:      #00e676;
-    --green-d:    #00b858;
+    --black:#07070e; --deep:#0d0d1a; --dark:#111126; --panel:#181530;
+    --card:#1c1840; --border:#2a1d5c; --border-lit:#4a30a0;
+    --purple:#5b1fa8; --purple-mid:#8040d0;
+    --neon:#ff2eee; --neon-dim:#aa1faa; --lavender:#cc88ff;
+    --white:#ffffff; --off-white:#ede8ff; --muted:#6655aa;
+    --red:#ff3355; --orange:#ff8800; --yellow:#ffd700;
+    --green:#00e676; --green-d:#00b858;
+    --note-gold:#ffcc44;
   }
-  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    background: var(--black);
-    color: var(--off-white);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  body::after {
-    content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-    opacity: 0.4;
-  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black);color:var(--off-white);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden;}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");opacity:0.4;}
 
-  /* PIN SCREEN */
-  #pin-screen {
-    position:fixed; inset:0; z-index:1000;
-    background:var(--black);
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    padding:32px 24px;
-  }
-  #pin-screen.hidden { display:none; }
-  .pin-logo {
-    font-family:'Bebas Neue',sans-serif;
-    font-size:42px; letter-spacing:6px;
-    color:var(--neon);
-    text-shadow:0 0 30px rgba(255,46,238,0.5),0 0 60px rgba(255,46,238,0.2);
-    margin-bottom:4px;
-    animation:flicker 4s infinite;
-  }
-  @keyframes flicker {
-    0%,95%,100%{opacity:1} 96%{opacity:0.85} 97%{opacity:1} 98%{opacity:0.9}
-  }
-  .pin-sub {
-    font-family:'DM Mono',monospace;
-    font-size:11px; letter-spacing:4px;
-    color:var(--muted); margin-bottom:48px;
-    text-transform:uppercase;
-  }
-  .pin-label {
-    font-size:12px; letter-spacing:2px; text-transform:uppercase;
-    color:var(--muted); margin-bottom:20px;
-    font-family:'DM Mono',monospace;
-  }
-  .pin-dots { display:flex; gap:14px; margin-bottom:32px; }
-  .pin-dot {
-    width:14px; height:14px; border-radius:50%;
-    border:2px solid var(--border-lit);
-    background:transparent; transition:all 0.15s;
-  }
-  .pin-dot.filled { background:var(--neon); border-color:var(--neon); box-shadow:0 0 10px rgba(255,46,238,0.6); }
-  .pin-dot.error  { background:var(--red);  border-color:var(--red);  box-shadow:0 0 10px rgba(255,51,85,0.6); animation:shake 0.3s ease; }
-  @keyframes shake {
-    0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
-    40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
-  }
-  .pin-pad { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; width:240px; }
-  .pin-key {
-    height:60px; border-radius:10px;
-    background:var(--panel); border:1px solid var(--border);
-    color:var(--white); font-family:'DM Sans',sans-serif;
-    font-size:20px; font-weight:500;
-    cursor:pointer; transition:all 0.1s;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .pin-key:hover  { background:var(--card); border-color:var(--border-lit); }
-  .pin-key:active { background:var(--purple); transform:scale(0.95); }
-  .pin-key.del    { font-size:16px; color:var(--muted); }
-  .pin-key.empty  { background:transparent; border:none; cursor:default; }
-  .pin-error-msg  { margin-top:20px; color:var(--red); font-size:12px; letter-spacing:1px; font-family:'DM Mono',monospace; height:16px; }
+  /* PIN */
+  #pin-screen{position:fixed;inset:0;z-index:1000;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+  #pin-screen.hidden{display:none;}
+  .pin-logo{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:6px;color:var(--neon);text-shadow:0 0 30px rgba(255,46,238,0.5),0 0 60px rgba(255,46,238,0.2);margin-bottom:4px;animation:flicker 4s infinite;}
+  @keyframes flicker{0%,95%,100%{opacity:1}96%{opacity:0.85}97%{opacity:1}98%{opacity:0.9}}
+  .pin-sub{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:4px;color:var(--muted);margin-bottom:48px;text-transform:uppercase;}
+  .pin-label{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;font-family:'DM Mono',monospace;}
+  .pin-dots{display:flex;gap:14px;margin-bottom:32px;}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border-lit);background:transparent;transition:all 0.15s;}
+  .pin-dot.filled{background:var(--neon);border-color:var(--neon);box-shadow:0 0 10px rgba(255,46,238,0.6);}
+  .pin-dot.error{background:var(--red);border-color:var(--red);box-shadow:0 0 10px rgba(255,51,85,0.6);animation:shake 0.3s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:240px;}
+  .pin-key{height:60px;border-radius:10px;background:var(--panel);border:1px solid var(--border);color:var(--white);font-family:'DM Sans',sans-serif;font-size:20px;font-weight:500;cursor:pointer;transition:all 0.1s;display:flex;align-items:center;justify-content:center;}
+  .pin-key:hover{background:var(--card);border-color:var(--border-lit);}
+  .pin-key:active{background:var(--purple);transform:scale(0.95);}
+  .pin-key.del{font-size:16px;color:var(--muted);}
+  .pin-key.empty{background:transparent;border:none;cursor:default;}
+  .pin-error-msg{margin-top:20px;color:var(--red);font-size:12px;letter-spacing:1px;font-family:'DM Mono',monospace;height:16px;}
 
   /* APP */
-  #app { display:none; }
-  #app.visible { display:block; }
+  #app{display:none;}
 
   /* HEADER */
-  header {
-    position:sticky; top:0; z-index:100;
-    background:rgba(7,7,14,0.96);
-    border-bottom:1px solid var(--border);
-    backdrop-filter:blur(16px);
-  }
-  .header-inner {
-    max-width:920px; margin:0 auto; padding:0 16px;
-    height:56px; display:flex; align-items:center; justify-content:space-between;
-  }
-  .logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; color:var(--neon); text-shadow:0 0 16px rgba(255,46,238,0.4); line-height:1; }
-  .logo-sub { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-top:1px; }
-  .header-right { display:flex; align-items:center; gap:12px; }
-  .sync-indicator { display:flex; align-items:center; gap:6px; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
-  .sync-dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
-  .sync-dot.syncing { background:var(--yellow); box-shadow:0 0 6px var(--yellow); animation:none; }
-  .sync-dot.offline { background:var(--red);    box-shadow:0 0 6px var(--red);    animation:none; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .lock-btn { background:transparent; border:1px solid var(--border); border-radius:6px; padding:5px 10px; color:var(--muted); font-size:12px; cursor:pointer; transition:all 0.2s; }
-  .lock-btn:hover { border-color:var(--neon); color:var(--neon); }
+  header{position:sticky;top:0;z-index:100;background:rgba(7,7,14,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);}
+  .header-inner{max-width:920px;margin:0 auto;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--neon);text-shadow:0 0 16px rgba(255,46,238,0.4);line-height:1;}
+  .logo-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-top:1px;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .sync-indicator{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+  .sync-dot.syncing{background:var(--yellow);box-shadow:0 0 6px var(--yellow);animation:none;}
+  .sync-dot.offline{background:var(--red);box-shadow:0 0 6px var(--red);animation:none;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .lock-btn{background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--muted);font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .lock-btn:hover{border-color:var(--neon);color:var(--neon);}
 
-  /* MAIN */
-  main { max-width:920px; margin:0 auto; padding:20px 16px 100px; }
+  main{max-width:920px;margin:0 auto;padding:20px 16px 100px;}
 
   /* TABS */
-  .tabs { display:flex; gap:4px; overflow-x:auto; padding-bottom:2px; margin-bottom:20px; scrollbar-width:none; }
-  .tabs::-webkit-scrollbar { display:none; }
-  .tab { flex-shrink:0; padding:7px 14px; border-radius:6px; border:1px solid var(--border); background:var(--panel); color:var(--muted); font-size:12px; font-weight:500; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
-  .tab:hover  { border-color:var(--purple-mid); color:var(--lavender); }
-  .tab.active { background:var(--purple); border-color:var(--neon); color:var(--white); box-shadow:0 0 14px rgba(255,46,238,0.18); }
+  .tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px;margin-bottom:20px;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex-shrink:0;padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
+  .tab:hover{border-color:var(--purple-mid);color:var(--lavender);}
+  .tab.active{background:var(--purple);border-color:var(--neon);color:var(--white);box-shadow:0 0 14px rgba(255,46,238,0.18);}
 
   /* STATS */
-  .stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:20px; }
-  @media(min-width:560px){ .stats-grid { grid-template-columns:repeat(4,1fr); } }
-  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; position:relative; overflow:hidden; }
-  .stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
-  .stat-card.s-red::after    { background:var(--red);    box-shadow:0 0 8px var(--red); }
-  .stat-card.s-orange::after { background:var(--orange); }
-  .stat-card.s-green::after  { background:var(--green);  }
-  .stat-card.s-neon::after   { background:var(--neon);   box-shadow:0 0 8px var(--neon); }
-  .stat-lbl { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:6px; }
-  .stat-val { font-family:'Bebas Neue',sans-serif; font-size:38px; line-height:1; letter-spacing:1px; }
-  .stat-card.s-red .stat-val    { color:var(--red); }
-  .stat-card.s-orange .stat-val { color:var(--orange); }
-  .stat-card.s-green .stat-val  { color:var(--green); }
-  .stat-card.s-neon .stat-val   { color:var(--neon); }
-  .stat-note { font-size:10px; color:var(--muted); margin-top:3px; }
+  .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
+  @media(min-width:560px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;}
+  .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .stat-card.s-red::after{background:var(--red);box-shadow:0 0 8px var(--red);}
+  .stat-card.s-orange::after{background:var(--orange);}
+  .stat-card.s-green::after{background:var(--green);}
+  .stat-card.s-neon::after{background:var(--neon);box-shadow:0 0 8px var(--neon);}
+  .stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;}
+  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:38px;line-height:1;letter-spacing:1px;}
+  .stat-card.s-red .stat-val{color:var(--red);}
+  .stat-card.s-orange .stat-val{color:var(--orange);}
+  .stat-card.s-green .stat-val{color:var(--green);}
+  .stat-card.s-neon .stat-val{color:var(--neon);}
+  .stat-note{font-size:10px;color:var(--muted);margin-top:3px;}
 
   /* ALERTS */
-  .alerts-wrap { background:linear-gradient(135deg,rgba(255,51,85,0.07),rgba(255,136,0,0.04)); border:1px solid rgba(255,51,85,0.22); border-radius:12px; padding:16px; margin-bottom:20px; }
-  .alerts-hdr  { font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px; color:var(--red); margin-bottom:10px; }
-  .alert-row   { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:13px; }
-  .alert-row:last-child { border-bottom:none; padding-bottom:0; }
-  .alert-name  { color:var(--white); font-weight:500; }
-  .alert-act   { font-family:'DM Mono',monospace; font-size:10px; color:var(--orange); }
+  .alerts-wrap{background:linear-gradient(135deg,rgba(255,51,85,0.07),rgba(255,136,0,0.04));border:1px solid rgba(255,51,85,0.22);border-radius:12px;padding:16px;margin-bottom:20px;}
+  .alerts-hdr{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--red);margin-bottom:10px;}
+  .alert-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;}
+  .alert-row:last-child{border-bottom:none;padding-bottom:0;}
+  .alert-name{color:var(--white);font-weight:500;}
+  .alert-act{font-family:'DM Mono',monospace;font-size:10px;color:var(--orange);}
 
   /* SECTION HEADER */
-  .sec-hdr   { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-  .sec-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; color:var(--lavender); }
-  .sec-count { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+  .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .sec-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--lavender);}
+  .sec-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
 
   /* ITEM CARDS */
-  .item-list { display:flex; flex-direction:column; gap:7px; }
-  .item-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; transition:border-color 0.2s; position:relative; overflow:hidden; }
-  .item-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:10px 0 0 10px; }
-  .item-card.s-out::before  { background:var(--red);    box-shadow:0 0 8px rgba(255,51,85,0.6); }
-  .item-card.s-low::before  { background:var(--orange); }
-  .item-card.s-warn::before { background:var(--yellow); }
-  .item-card.s-good::before { background:var(--green-d); }
-  .item-card.s-out  { border-color:rgba(255,51,85,0.35); }
-  .item-card.s-low  { border-color:rgba(255,136,0,0.35); }
-  .item-name  { font-weight:600; font-size:14px; color:var(--white); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .item-pills { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  .pill       { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
-  .pill strong{ color:var(--lavender); }
-  .order-chip { font-family:'DM Mono',monospace; font-size:10px; color:var(--orange); background:rgba(255,136,0,0.08); border:1px solid rgba(255,136,0,0.2); border-radius:4px; padding:2px 6px; margin-top:5px; display:inline-block; }
-  .item-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0; }
+  .item-list{display:flex;flex-direction:column;gap:7px;}
+  .item-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;transition:border-color 0.2s;position:relative;overflow:hidden;}
+  .item-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;}
+  .item-card.s-out::before{background:var(--red);box-shadow:0 0 8px rgba(255,51,85,0.6);}
+  .item-card.s-low::before{background:var(--orange);}
+  .item-card.s-warn::before{background:var(--yellow);}
+  .item-card.s-good::before{background:var(--green-d);}
+  .item-card.s-out{border-color:rgba(255,51,85,0.35);}
+  .item-card.s-low{border-color:rgba(255,136,0,0.35);}
+  .item-name{font-weight:600;font-size:14px;color:var(--white);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .item-pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .pill{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+  .pill strong{color:var(--lavender);}
+  .bs-tag{font-size:9px;font-weight:700;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;background:rgba(255,46,238,0.1);color:var(--neon);border:1px solid rgba(255,46,238,0.25);}
+  .order-chip{font-family:'DM Mono',monospace;font-size:10px;color:var(--orange);background:rgba(255,136,0,0.08);border:1px solid rgba(255,136,0,0.2);border-radius:4px;padding:2px 6px;margin-top:5px;display:inline-block;}
+  .item-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
 
   /* BADGE */
-  .badge      { font-size:9px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; padding:3px 8px; border-radius:20px; white-space:nowrap; }
-  .badge-out  { background:rgba(255,51,85,0.12);  color:var(--red);    border:1px solid rgba(255,51,85,0.25); }
-  .badge-low  { background:rgba(255,136,0,0.12);  color:var(--orange); border:1px solid rgba(255,136,0,0.25); }
-  .badge-warn { background:rgba(255,215,0,0.08);  color:var(--yellow); border:1px solid rgba(255,215,0,0.2); }
-  .badge-good { background:rgba(0,230,118,0.08);  color:var(--green);  border:1px solid rgba(0,230,118,0.18); }
+  .badge{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+  .badge-out{background:rgba(255,51,85,0.12);color:var(--red);border:1px solid rgba(255,51,85,0.25);}
+  .badge-low{background:rgba(255,136,0,0.12);color:var(--orange);border:1px solid rgba(255,136,0,0.25);}
+  .badge-warn{background:rgba(255,215,0,0.08);color:var(--yellow);border:1px solid rgba(255,215,0,0.2);}
+  .badge-good{background:rgba(0,230,118,0.08);color:var(--green);border:1px solid rgba(0,230,118,0.18);}
 
   /* STEPPER */
-  .stepper    { display:flex; align-items:center; background:var(--dark); border-radius:8px; border:1px solid var(--border); overflow:hidden; }
-  .step-btn   { width:30px; height:30px; background:transparent; border:none; cursor:pointer; color:var(--lavender); font-size:18px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.12s; flex-shrink:0; }
-  .step-btn:hover  { background:var(--panel); }
-  .step-btn:active { background:var(--purple); }
-  .step-inp   { width:46px; height:30px; background:transparent; border:none; text-align:center; font-family:'DM Mono',monospace; font-size:13px; font-weight:500; color:var(--white); outline:none; -moz-appearance:textfield; }
-  .step-inp::-webkit-outer-spin-button,.step-inp::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .stepper{display:flex;align-items:center;background:var(--dark);border-radius:8px;border:1px solid var(--border);overflow:hidden;}
+  .step-btn{width:30px;height:30px;background:transparent;border:none;cursor:pointer;color:var(--lavender);font-size:18px;font-weight:300;display:flex;align-items:center;justify-content:center;transition:background 0.12s;flex-shrink:0;}
+  .step-btn:hover{background:var(--panel);}
+  .step-btn:active{background:var(--purple);}
+  .step-inp{width:46px;height:30px;background:transparent;border:none;text-align:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--white);outline:none;-moz-appearance:textfield;}
+  .step-inp::-webkit-outer-spin-button,.step-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
 
   /* ADD BTN */
-  .add-btn { width:100%; margin-top:8px; padding:11px; background:transparent; border:1px dashed var(--border); border-radius:10px; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; transition:all 0.2s; }
-  .add-btn:hover { border-color:var(--purple-mid); color:var(--lavender); background:var(--panel); }
+  .add-btn{width:100%;margin-top:8px;padding:11px;background:transparent;border:1px dashed var(--border);border-radius:10px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;transition:all 0.2s;}
+  .add-btn:hover{border-color:var(--purple-mid);color:var(--lavender);background:var(--panel);}
 
   /* ORDER SHEET */
-  .order-sec       { margin-bottom:18px; }
-  .order-sec-title { font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin-bottom:7px; padding-bottom:5px; border-bottom:1px solid var(--border); }
-  .order-row       { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:5px; transition:opacity 0.2s; }
-  .order-row.checked { opacity:0.35; }
-  .order-name { font-weight:500; color:var(--white); font-size:13px; }
-  .order-meta { font-size:11px; color:var(--muted); margin-top:2px; }
-  .order-qty  { font-family:'DM Mono',monospace; font-size:12px; color:var(--neon); font-weight:600; }
-  .order-cb   { width:16px; height:16px; cursor:pointer; accent-color:var(--neon); margin-left:10px; }
+  .order-sec{margin-bottom:18px;}
+  .order-sec-title{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+  .order-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;transition:opacity 0.2s;}
+  .order-row.checked{opacity:0.35;}
+  .order-name{font-weight:500;color:var(--white);font-size:13px;}
+  .order-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .order-qty{font-family:'DM Mono',monospace;font-size:12px;color:var(--neon);font-weight:600;}
+  .order-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--neon);margin-left:10px;}
 
   /* LOG */
-  .log-entry { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:8px; }
-  .log-top   { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
-  .log-date  { font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:1px; color:var(--neon); }
-  .log-who   { font-size:12px; color:var(--lavender); font-weight:600; }
-  .log-line  { font-size:12px; color:var(--muted); margin-bottom:3px; }
-  .log-line span { color:var(--off-white); }
+  .log-entry{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;}
+  .log-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+  .log-date{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;color:var(--neon);}
+  .log-who{font-size:12px;color:var(--lavender);font-weight:600;}
+  .log-line{font-size:12px;color:var(--muted);margin-bottom:3px;}
+  .log-line span{color:var(--off-white);}
 
   /* REVENUE */
-  .rev-bar     { margin-bottom:9px; }
-  .rev-bar-top { display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
-  .rev-bar-top span:last-child { font-family:'DM Mono',monospace; color:var(--neon); }
-  .rev-track   { height:5px; background:var(--dark); border-radius:3px; overflow:hidden; }
-  .rev-fill    { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--purple),var(--neon)); }
+  .rev-bar{margin-bottom:9px;}
+  .rev-bar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+  .rev-bar-top span:last-child{font-family:'DM Mono',monospace;color:var(--neon);}
+  .rev-track{height:5px;background:var(--dark);border-radius:3px;overflow:hidden;}
+  .rev-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--neon));}
+
+  /* ── NOTES BOARD ── */
+  .notes-board{margin-top:8px;}
+  .notes-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .notes-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--note-gold);}
+  .note-add-btn{background:transparent;border:1px solid rgba(255,204,68,0.3);border-radius:6px;padding:6px 12px;color:var(--note-gold);font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+  .note-add-btn:hover{background:rgba(255,204,68,0.08);border-color:var(--note-gold);}
+  .notes-list{display:flex;flex-direction:column;gap:8px;}
+  .note-card{background:var(--card);border:1px solid rgba(255,204,68,0.2);border-radius:10px;padding:14px 16px;position:relative;border-left:3px solid var(--note-gold);}
+  .note-card.priority{border-color:rgba(255,51,85,0.4);border-left-color:var(--red);background:rgba(255,51,85,0.04);}
+  .note-card.priority .note-text{color:var(--white);}
+  .note-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+  .note-text{color:var(--off-white);font-size:14px;line-height:1.5;flex:1;}
+  .note-actions{display:flex;gap:6px;flex-shrink:0;}
+  .note-btn{background:transparent;border:none;cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;transition:background 0.15s;line-height:1;}
+  .note-btn:hover{background:rgba(255,255,255,0.08);}
+  .note-meta{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+  .priority-badge{font-size:9px;font-weight:700;letter-spacing:0.8px;padding:2px 6px;border-radius:4px;background:rgba(255,51,85,0.15);color:var(--red);border:1px solid rgba(255,51,85,0.3);text-transform:uppercase;margin-right:6px;}
+  .notes-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:10px;}
 
   /* SAVE BAR */
-  .save-bar { position:fixed; bottom:0; left:0; right:0; background:linear-gradient(0deg,rgba(7,7,14,0.98) 50%,transparent); padding:14px 16px 18px; display:flex; justify-content:center; z-index:50; }
-  .save-btn { background:var(--neon); color:var(--black); border:none; cursor:pointer; font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:3px; padding:13px 0; border-radius:8px; box-shadow:0 0 24px rgba(255,46,238,0.35); transition:all 0.2s; width:100%; max-width:420px; }
-  .save-btn:hover  { background:var(--white); box-shadow:0 0 32px rgba(255,46,238,0.55); transform:translateY(-1px); }
-  .save-btn:active { transform:translateY(0); }
-  .save-btn.saved  { background:var(--green); box-shadow:0 0 24px rgba(0,230,118,0.4); }
+  .save-bar{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(7,7,14,0.98) 50%,transparent);padding:14px 16px 18px;display:flex;justify-content:center;z-index:50;}
+  .save-btn{background:var(--neon);color:var(--black);border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;padding:13px 0;border-radius:8px;box-shadow:0 0 24px rgba(255,46,238,0.35);transition:all 0.2s;width:100%;max-width:420px;}
+  .save-btn:hover{background:var(--white);box-shadow:0 0 32px rgba(255,46,238,0.55);transform:translateY(-1px);}
+  .save-btn:active{transform:translateY(0);}
+  .save-btn.saved{background:var(--green);box-shadow:0 0 24px rgba(0,230,118,0.4);}
 
   /* TOAST */
-  .toast { position:fixed; bottom:86px; left:50%; transform:translateX(-50%) translateY(16px); background:var(--green); color:var(--black); font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px; padding:10px 22px; border-radius:8px; box-shadow:0 4px 20px rgba(0,230,118,0.4); opacity:0; transition:all 0.25s; z-index:200; pointer-events:none; }
-  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--green);color:var(--black);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;padding:10px 22px;border-radius:8px;box-shadow:0 4px 20px rgba(0,230,118,0.4);opacity:0;transition:all 0.25s;z-index:200;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   /* MODAL */
-  .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:150; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.18s; }
-  .overlay.open { opacity:1; pointer-events:all; }
-  .modal { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:22px; width:100%; max-width:390px; transform:translateY(18px); transition:transform 0.18s; }
-  .overlay.open .modal { transform:translateY(0); }
-  .modal-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; color:var(--neon); margin-bottom:14px; }
-  .field { margin-bottom:12px; }
-  .field label { display:block; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:5px; }
-  .field input,.field select { width:100%; background:var(--dark); border:1px solid var(--border); border-radius:6px; padding:9px 11px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:border-color 0.18s; }
-  .field input:focus,.field select:focus { border-color:var(--neon); }
-  .field select option { background:var(--dark); }
-  .modal-actions { display:flex; gap:9px; margin-top:18px; }
-  .btn-p { flex:1; background:var(--neon); color:var(--black); border:none; cursor:pointer; border-radius:6px; font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px; padding:11px; transition:all 0.18s; }
-  .btn-p:hover { background:var(--white); }
-  .btn-s { flex:1; background:transparent; color:var(--muted); border:1px solid var(--border); cursor:pointer; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:13px; padding:11px; transition:all 0.18s; }
-  .btn-s:hover { border-color:var(--purple-mid); color:var(--lavender); }
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:150;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.18s;}
+  .overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;width:100%;max-width:390px;transform:translateY(18px);transition:transform 0.18s;}
+  .overlay.open .modal{transform:translateY(0);}
+  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--neon);margin-bottom:14px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:5px;}
+  .field input,.field select,.field textarea{width:100%;background:var(--dark);border:1px solid var(--border);border-radius:6px;padding:9px 11px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.18s;resize:vertical;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--neon);}
+  .field select option{background:var(--dark);}
+  .modal-actions{display:flex;gap:9px;margin-top:18px;}
+  .btn-p{flex:1;background:var(--neon);color:var(--black);border:none;cursor:pointer;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;padding:11px;transition:all 0.18s;}
+  .btn-p:hover{background:var(--white);}
+  .btn-s{flex:1;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;padding:11px;transition:all 0.18s;}
+  .btn-s:hover{border-color:var(--purple-mid);color:var(--lavender);}
 
-  /* EMPTY */
-  .empty { text-align:center; padding:44px 20px; color:var(--muted); }
-  .empty .ico { font-size:36px; margin-bottom:10px; }
-
-  .hidden { display:none !important; }
+  .empty{text-align:center;padding:44px 20px;color:var(--muted);}
+  .empty .ico{font-size:36px;margin-bottom:10px;}
+  .hidden{display:none !important;}
 </style>
 </head>
 <body>
@@ -272,10 +219,8 @@
   <div class="pin-sub">Inventory System</div>
   <div class="pin-label">Enter PIN to access</div>
   <div class="pin-dots">
-    <div class="pin-dot" id="pd0"></div>
-    <div class="pin-dot" id="pd1"></div>
-    <div class="pin-dot" id="pd2"></div>
-    <div class="pin-dot" id="pd3"></div>
+    <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
   </div>
   <div class="pin-pad">
     <button class="pin-key" onclick="pinPress('1')">1</button>
@@ -315,7 +260,6 @@
   <main>
     <div class="tabs">
       <div class="tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
-      <div class="tab" onclick="showTab('bottles')">🍾 Bottles</div>
       <div class="tab" onclick="showTab('tequila')">🥃 Tequila</div>
       <div class="tab" onclick="showTab('whiskey')">🥃 Whiskey</div>
       <div class="tab" onclick="showTab('vodka')">🍸 Vodka</div>
@@ -340,7 +284,7 @@
         <div class="sec-title">Revenue Breakdown</div>
         <div class="sec-count">Feb 8 – Mar 8 · 28 days</div>
       </div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:24px;">
         <div class="rev-bar"><div class="rev-bar-top"><span>Full Bottle Service</span><span>$15,972 · 45%</span></div><div class="rev-track"><div class="rev-fill" style="width:45%"></div></div></div>
         <div class="rev-bar"><div class="rev-bar-top"><span>Tequila shots/pours</span><span>$8,198 · 23%</span></div><div class="rev-track"><div class="rev-fill" style="width:23%"></div></div></div>
         <div class="rev-bar"><div class="rev-bar-top"><span>Hookah</span><span>$3,310 · 9%</span></div><div class="rev-track"><div class="rev-fill" style="width:9%"></div></div></div>
@@ -348,9 +292,20 @@
         <div class="rev-bar"><div class="rev-bar-top"><span>Beer & Mixers</span><span>$1,488 · 4%</span></div><div class="rev-track"><div class="rev-fill" style="width:4%"></div></div></div>
         <div class="rev-bar"><div class="rev-bar-top"><span>Vodka</span><span>$438 · 1%</span></div><div class="rev-track"><div class="rev-fill" style="width:1%"></div></div></div>
       </div>
+
+      <!-- NOTES BOARD -->
+      <div class="notes-board">
+        <div class="notes-hdr">
+          <div class="notes-title">📌 Team Notes</div>
+          <button class="note-add-btn" onclick="openNoteModal()">+ Add Note</button>
+        </div>
+        <div class="notes-list" id="notes-list">
+          <div class="notes-empty">No notes yet — add something for the team to see</div>
+        </div>
+      </div>
     </div>
 
-    <div id="tab-bottles"   class="hidden"></div>
+    <!-- CATEGORY TABS -->
     <div id="tab-tequila"   class="hidden"></div>
     <div id="tab-whiskey"   class="hidden"></div>
     <div id="tab-vodka"     class="hidden"></div>
@@ -394,6 +349,9 @@
     <div class="field"><label>Cost per Unit ($)</label><input id="nCost" type="number" placeholder="0.00" step="0.01"></div>
     <div class="field"><label>Par Level</label><input id="nPar" type="number" placeholder="3" min="0"></div>
     <div class="field"><label>Reorder Quantity</label><input id="nReorder" type="number" placeholder="4" min="0"></div>
+    <div class="field"><label>Available for Bottle Service?</label>
+      <select id="nBs"><option value="0">No</option><option value="1">Yes</option></select>
+    </div>
     <div class="modal-actions">
       <button class="btn-s" onclick="closeModal('addModal')">Cancel</button>
       <button class="btn-p" onclick="confirmAdd()">Add Product</button>
@@ -416,6 +374,22 @@
   </div>
 </div>
 
+<!-- NOTE MODAL -->
+<div class="overlay" id="noteModal">
+  <div class="modal">
+    <div class="modal-title" id="noteModalTitle">Add Note</div>
+    <div class="field"><label>Note</label><textarea id="noteText" rows="3" placeholder="What does the team need to know?"></textarea></div>
+    <div class="field"><label>Added By</label><input id="noteAuthor" placeholder="Your name"></div>
+    <div class="field"><label>Priority</label>
+      <select id="notePriority"><option value="0">Normal</option><option value="1">🚨 Priority — show at top</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-s" onclick="closeModal('noteModal')">Cancel</button>
+      <button class="btn-p" onclick="confirmNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
@@ -428,223 +402,186 @@ const firebaseConfig = {
   messagingSenderId: "385906277763",
   appId: "1:385906277763:web:d8f58e69786a6adfdf0ab6"
 };
-
 const fbApp = initializeApp(firebaseConfig);
 const db    = getFirestore(fbApp);
 
 // ── PIN ──────────────────────────────────────────────────────
-let pinBuffer = '';
-let sessionUnlocked = false;
-function getPin() { return localStorage.getItem('sclt_pin') || '1234'; }
-
-window.pinPress = function(d) {
-  if(pinBuffer.length >= 4) return;
-  pinBuffer += d;
-  updateDots();
-  if(pinBuffer.length === 4) setTimeout(checkPin, 120);
-};
-window.pinDel = function() { pinBuffer = pinBuffer.slice(0,-1); updateDots(); };
-
-function updateDots(state='') {
-  for(let i=0;i<4;i++){
-    const el = document.getElementById('pd'+i);
-    el.className = 'pin-dot';
-    if(i < pinBuffer.length) el.classList.add(state||'filled');
-  }
+let pinBuffer = '', sessionUnlocked = false;
+function getPin(){ return localStorage.getItem('sclt_pin')||'1234'; }
+window.pinPress = function(d){ if(pinBuffer.length>=4)return; pinBuffer+=d; updateDots(); if(pinBuffer.length===4)setTimeout(checkPin,120); };
+window.pinDel   = function(){ pinBuffer=pinBuffer.slice(0,-1); updateDots(); };
+function updateDots(state=''){
+  for(let i=0;i<4;i++){const el=document.getElementById('pd'+i);el.className='pin-dot';if(i<pinBuffer.length)el.classList.add(state||'filled');}
 }
-function checkPin() {
-  if(pinBuffer === getPin()) {
+function checkPin(){
+  if(pinBuffer===getPin()){
     document.getElementById('pin-screen').classList.add('hidden');
-    document.getElementById('app').style.display = 'block';
-    sessionUnlocked = true;
-    pinBuffer = ''; updateDots();
-    initApp();
+    document.getElementById('app').style.display='block';
+    sessionUnlocked=true; pinBuffer=''; updateDots(); initApp();
   } else {
     updateDots('error');
-    document.getElementById('pin-err').textContent = 'Incorrect PIN — try again';
-    setTimeout(()=>{ pinBuffer=''; updateDots(); document.getElementById('pin-err').textContent=''; }, 900);
+    document.getElementById('pin-err').textContent='Incorrect PIN — try again';
+    setTimeout(()=>{ pinBuffer=''; updateDots(); document.getElementById('pin-err').textContent=''; },900);
   }
 }
-window.lockApp = function() {
-  document.getElementById('app').style.display = 'none';
+window.lockApp = function(){
+  document.getElementById('app').style.display='none';
   document.getElementById('pin-screen').classList.remove('hidden');
-  sessionUnlocked = false; pinBuffer = ''; updateDots();
+  sessionUnlocked=false; pinBuffer=''; updateDots();
 };
-document.addEventListener('keydown', e => {
-  if(!sessionUnlocked) {
-    if(e.key>='0'&&e.key<='9') window.pinPress(e.key);
-    if(e.key==='Backspace') window.pinDel();
-  }
-});
+document.addEventListener('keydown',e=>{ if(!sessionUnlocked){ if(e.key>='0'&&e.key<='9')window.pinPress(e.key); if(e.key==='Backspace')window.pinDel(); }});
 
-// ── DEFAULT DATA ─────────────────────────────────────────────
+// ── DATA ─────────────────────────────────────────────────────
+// bs:true = also offered as bottle service
 const DEFAULT_INVENTORY = {
-  bottles:[
-    {id:'b1',name:'Don Julio Repo — Full Bottle',unit:'750ml',cost:175,par:12,reorder:12,onHand:50,avgWeek:12.5,avgNight:2.5},
-    {id:'b2',name:'Don Julio 1942 — Full Bottle',unit:'750ml',cost:350,par:3,reorder:3,onHand:4,avgWeek:1.0,avgNight:0.2},
-    {id:'b3',name:'La Gritona — Full Bottle',unit:'750ml',cost:180,par:2,reorder:2,onHand:3,avgWeek:0.8,avgNight:0.1},
-    {id:'b4',name:'Casa Migos Rep — Full Bottle',unit:'750ml',cost:160,par:2,reorder:2,onHand:0,avgWeek:0.5,avgNight:0.1},
-    {id:'b5',name:'Hennessy VSOP — Full Bottle',unit:'750ml',cost:110,par:2,reorder:2,onHand:0,avgWeek:0.5,avgNight:0.1},
-    {id:'b6',name:'Jagermeister — Full Bottle',unit:'750ml',cost:90,par:2,reorder:2,onHand:0,avgWeek:0.5,avgNight:0.1},
-    {id:'b7',name:"Tito's — Full Bottle",unit:'750ml',cost:80,par:2,reorder:2,onHand:0,avgWeek:0.2,avgNight:0.1},
-    {id:'b8',name:'Belaire Rose — Full Bottle',unit:'750ml',cost:80,par:2,reorder:2,onHand:1,avgWeek:0.2,avgNight:0.1},
-  ],
   tequila:[
-    {id:'t1',name:'Don Julio Reposado',unit:'750ml',cost:45,par:10,reorder:10,onHand:1,avgWeek:4.6,avgNight:0.9},
-    {id:'t2',name:'Luna Azul Reposado',unit:'750ml',cost:18,par:4,reorder:4,onHand:1.25,avgWeek:1.6,avgNight:0.3},
-    {id:'t3',name:'Casa Migos Reposado',unit:'750ml',cost:40,par:3,reorder:3,onHand:0,avgWeek:1.2,avgNight:0.2},
-    {id:'t4',name:'La Gritona',unit:'750ml',cost:28,par:3,reorder:3,onHand:7,avgWeek:0.7,avgNight:0.1},
-    {id:'t5',name:'Teremana Reposado',unit:'750ml',cost:22,par:2,reorder:3,onHand:0,avgWeek:0.9,avgNight:0.2},
-    {id:'t6',name:'Casa Migos Blanco',unit:'750ml',cost:38,par:2,reorder:3,onHand:0,avgWeek:0.5,avgNight:0.1},
-    {id:'t7',name:'Teremana Blanco',unit:'750ml',cost:22,par:2,reorder:3,onHand:4.25,avgWeek:0.3,avgNight:0.1},
-    {id:'t8',name:'Cazadores Reposado',unit:'750ml',cost:22,par:2,reorder:3,onHand:0.5,avgWeek:0.1,avgNight:0.0},
-    {id:'t9',name:'Luna Azul Blanco',unit:'750ml',cost:18,par:2,reorder:2,onHand:0,avgWeek:0.3,avgNight:0.1},
-    {id:'t10',name:'El Toro Silver',unit:'750ml',cost:10,par:1,reorder:2,onHand:0,avgWeek:0.1,avgNight:0.0},
-    {id:'t11',name:'El Toro Gold',unit:'750ml',cost:10,par:1,reorder:2,onHand:0,avgWeek:0.1,avgNight:0.0},
+    {id:'t1',name:'Don Julio Reposado',unit:'750ml',cost:45,par:10,reorder:10,onHand:1,avgWeek:4.6,avgNight:0.9,bs:true},
+    {id:'t2',name:'Luna Azul Reposado',unit:'750ml',cost:18,par:4,reorder:4,onHand:1.25,avgWeek:1.6,avgNight:0.3,bs:false},
+    {id:'t3',name:'Casa Migos Reposado',unit:'750ml',cost:40,par:3,reorder:3,onHand:0,avgWeek:1.2,avgNight:0.2,bs:true},
+    {id:'t4',name:'La Gritona',unit:'750ml',cost:28,par:3,reorder:3,onHand:7,avgWeek:0.7,avgNight:0.1,bs:true},
+    {id:'t5',name:'Teremana Reposado',unit:'750ml',cost:22,par:2,reorder:3,onHand:0,avgWeek:0.9,avgNight:0.2,bs:false},
+    {id:'t6',name:'Casa Migos Blanco',unit:'750ml',cost:38,par:2,reorder:3,onHand:0,avgWeek:0.5,avgNight:0.1,bs:true},
+    {id:'t7',name:'Teremana Blanco',unit:'750ml',cost:22,par:2,reorder:3,onHand:4.25,avgWeek:0.3,avgNight:0.1,bs:false},
+    {id:'t8',name:'Cazadores Reposado',unit:'750ml',cost:22,par:2,reorder:3,onHand:0.5,avgWeek:0.1,avgNight:0.0,bs:false},
+    {id:'t9',name:'Luna Azul Blanco',unit:'750ml',cost:18,par:2,reorder:2,onHand:0,avgWeek:0.3,avgNight:0.1,bs:false},
+    {id:'t10',name:'Don Julio 1942',unit:'750ml',cost:350,par:3,reorder:3,onHand:4,avgWeek:1.0,avgNight:0.2,bs:true},
+    {id:'t11',name:'El Toro Silver',unit:'750ml',cost:10,par:1,reorder:2,onHand:0,avgWeek:0.1,avgNight:0.0,bs:false},
+    {id:'t12',name:'El Toro Gold',unit:'750ml',cost:10,par:1,reorder:2,onHand:0,avgWeek:0.1,avgNight:0.0,bs:false},
   ],
   whiskey:[
-    {id:'w1',name:'Jägermeister',unit:'750ml',cost:20,par:3,reorder:3,onHand:0,avgWeek:2.5,avgNight:0.5},
-    {id:'w2',name:'Hennessy VS',unit:'750ml',cost:32,par:3,reorder:4,onHand:1,avgWeek:1.0,avgNight:0.2},
-    {id:'w3',name:'Crown Royal',unit:'750ml',cost:24,par:2,reorder:3,onHand:5.25,avgWeek:0.8,avgNight:0.2},
-    {id:'w4',name:"Jack Daniel's",unit:'750ml',cost:20,par:2,reorder:3,onHand:0,avgWeek:0.4,avgNight:0.1},
-    {id:'w5',name:'Crown Apple',unit:'750ml',cost:24,par:2,reorder:3,onHand:3.75,avgWeek:0,avgNight:0},
-    {id:'w6',name:"Jack Daniel's Honey",unit:'750ml',cost:22,par:2,reorder:3,onHand:0.75,avgWeek:0,avgNight:0},
-    {id:'w7',name:'Woodford Reserve',unit:'750ml',cost:30,par:2,reorder:3,onHand:0.5,avgWeek:0,avgNight:0},
-    {id:'w8',name:"Maker's Mark 101",unit:'750ml',cost:30,par:2,reorder:3,onHand:0.25,avgWeek:0,avgNight:0},
-    {id:'w9',name:'Remy Martin 1738',unit:'750ml',cost:45,par:2,reorder:2,onHand:0,avgWeek:0.3,avgNight:0.1},
-    {id:'w10',name:'Jameson',unit:'750ml',cost:22,par:1,reorder:2,onHand:0,avgWeek:0.1,avgNight:0.0},
+    {id:'w1',name:'Jägermeister',unit:'750ml',cost:20,par:3,reorder:3,onHand:0,avgWeek:2.5,avgNight:0.5,bs:true},
+    {id:'w2',name:'Hennessy VS',unit:'750ml',cost:32,par:3,reorder:4,onHand:1,avgWeek:1.0,avgNight:0.2,bs:true},
+    {id:'w3',name:'Hennessy VSOP',unit:'750ml',cost:45,par:2,reorder:2,onHand:0,avgWeek:0.5,avgNight:0.1,bs:true},
+    {id:'w4',name:'Crown Royal',unit:'750ml',cost:24,par:2,reorder:3,onHand:5.25,avgWeek:0.8,avgNight:0.2,bs:false},
+    {id:'w5',name:"Jack Daniel's",unit:'750ml',cost:20,par:2,reorder:3,onHand:0,avgWeek:0.4,avgNight:0.1,bs:false},
+    {id:'w6',name:'Crown Apple',unit:'750ml',cost:24,par:2,reorder:3,onHand:3.75,avgWeek:0,avgNight:0,bs:false},
+    {id:'w7',name:"Jack Daniel's Honey",unit:'750ml',cost:22,par:2,reorder:3,onHand:0.75,avgWeek:0,avgNight:0,bs:false},
+    {id:'w8',name:'Woodford Reserve',unit:'750ml',cost:30,par:2,reorder:3,onHand:0.5,avgWeek:0,avgNight:0,bs:false},
+    {id:'w9',name:"Maker's Mark 101",unit:'750ml',cost:30,par:2,reorder:3,onHand:0.25,avgWeek:0,avgNight:0,bs:false},
+    {id:'w10',name:'Remy Martin 1738',unit:'750ml',cost:45,par:2,reorder:2,onHand:0,avgWeek:0.3,avgNight:0.1,bs:true},
+    {id:'w11',name:'Jameson',unit:'750ml',cost:22,par:1,reorder:2,onHand:0,avgWeek:0.1,avgNight:0.0,bs:false},
   ],
   vodka:[
-    {id:'v1',name:"Tito's Vodka",unit:'750ml',cost:18,par:4,reorder:4,onHand:10,avgWeek:2.2,avgNight:0.5},
-    {id:'v2',name:'Ketel One',unit:'750ml',cost:22,par:2,reorder:3,onHand:1.25,avgWeek:0.4,avgNight:0.1},
-    {id:'v3',name:'Absolut Vodka',unit:'750ml',cost:16,par:2,reorder:3,onHand:0.5,avgWeek:0,avgNight:0},
-    {id:'v4',name:'Bombay Sapphire Gin',unit:'750ml',cost:22,par:2,reorder:3,onHand:1,avgWeek:0,avgNight:0},
+    {id:'v1',name:"Tito's Vodka",unit:'750ml',cost:18,par:4,reorder:4,onHand:10,avgWeek:2.2,avgNight:0.5,bs:true},
+    {id:'v2',name:'Ketel One',unit:'750ml',cost:22,par:2,reorder:3,onHand:1.25,avgWeek:0.4,avgNight:0.1,bs:false},
+    {id:'v3',name:'Absolut Vodka',unit:'750ml',cost:16,par:2,reorder:3,onHand:0.5,avgWeek:0,avgNight:0,bs:false},
+    {id:'v4',name:'Bombay Sapphire Gin',unit:'750ml',cost:22,par:2,reorder:3,onHand:1,avgWeek:0,avgNight:0,bs:false},
   ],
   specialty:[
-    {id:'sp1',name:'Aperol Liqueur',unit:'750ml',cost:22,par:2,reorder:2,onHand:1},
-    {id:'sp2',name:'Midori Melon Liqueur',unit:'750ml',cost:18,par:2,reorder:2,onHand:1.75},
-    {id:'sp3',name:'Watermelon Schnapps',unit:'750ml',cost:14,par:2,reorder:2,onHand:1},
-    {id:'sp4',name:'Campari Bitters',unit:'750ml',cost:22,par:2,reorder:2,onHand:0.25},
-    {id:'sp5',name:'Kamora Coffee Liqueur',unit:'750ml',cost:14,par:1,reorder:2,onHand:1},
-    {id:'sp6',name:'Del Santo Liqueur',unit:'750ml',cost:14,par:1,reorder:2,onHand:0.75},
-    {id:'sp7',name:'Bacardi Rum',unit:'750ml',cost:14,par:1,reorder:2,onHand:0.25},
+    {id:'sp1',name:'Aperol Liqueur',unit:'750ml',cost:22,par:2,reorder:2,onHand:1,bs:false},
+    {id:'sp2',name:'Midori Melon Liqueur',unit:'750ml',cost:18,par:2,reorder:2,onHand:1.75,bs:false},
+    {id:'sp3',name:'Watermelon Schnapps',unit:'750ml',cost:14,par:2,reorder:2,onHand:1,bs:false},
+    {id:'sp4',name:'Campari Bitters',unit:'750ml',cost:22,par:2,reorder:2,onHand:0.25,bs:false},
+    {id:'sp5',name:'Kamora Coffee Liqueur',unit:'750ml',cost:14,par:1,reorder:2,onHand:1,bs:false},
+    {id:'sp6',name:'Del Santo Liqueur',unit:'750ml',cost:14,par:1,reorder:2,onHand:0.75,bs:false},
+    {id:'sp7',name:'Bacardi Rum',unit:'750ml',cost:14,par:1,reorder:2,onHand:0.25,bs:false},
+    {id:'sp8',name:'Belaire Rose',unit:'750ml',cost:80,par:2,reorder:2,onHand:1,bs:true},
   ],
   beer:[
-    {id:'br1',name:'Red Bull (Regular)',unit:'Can',cost:2.5,par:30,reorder:24,onHand:0,avgWeek:19.8,avgNight:4.0},
-    {id:'br2',name:'Corona Extra',unit:'Bottle',cost:2.5,par:18,reorder:12,onHand:1,avgWeek:11.2,avgNight:2.2},
-    {id:'br3',name:'Red Bull Sugar Free',unit:'Can',cost:2.5,par:8,reorder:8,onHand:17,avgWeek:4.2,avgNight:0.8},
-    {id:'br4',name:'Sprite',unit:'Can',cost:1.0,par:8,reorder:8,onHand:16,avgWeek:4.0,avgNight:0.8},
-    {id:'br5',name:'Mich Ultra',unit:'Bottle',cost:2.0,par:6,reorder:6,onHand:11,avgWeek:3.0,avgNight:0.6},
-    {id:'br6',name:'Bud Light',unit:'Bottle',cost:2.0,par:6,reorder:6,onHand:12,avgWeek:1.5,avgNight:0.3},
-    {id:'br7',name:'Heineken',unit:'Bottle',cost:2.5,par:6,reorder:6,onHand:9,avgWeek:1.0,avgNight:0.2},
-    {id:'br8',name:'Budweiser',unit:'Bottle',cost:2.0,par:6,reorder:6,onHand:4,avgWeek:1.0,avgNight:0.2},
-    {id:'br9',name:'Coke',unit:'Can',cost:1.0,par:6,reorder:8,onHand:0,avgWeek:1.5,avgNight:0.3},
-    {id:'br10',name:'Ginger Ale',unit:'Can',cost:1.0,par:6,reorder:6,onHand:0,avgWeek:0.8,avgNight:0.2},
-    {id:'br11',name:'Water (Bottled)',unit:'Bottle',cost:1.0,par:20,reorder:24,onHand:0,avgWeek:25.2,avgNight:5.0},
-    {id:'br12',name:'Pineapple Juice',unit:'Can',cost:3.0,par:4,reorder:4,onHand:0,avgWeek:0.5,avgNight:0.1},
+    {id:'br1',name:'Red Bull (Regular)',unit:'Can',cost:2.5,par:30,reorder:24,onHand:0,avgWeek:19.8,avgNight:4.0,bs:false},
+    {id:'br2',name:'Corona Extra',unit:'Bottle',cost:2.5,par:18,reorder:12,onHand:1,avgWeek:11.2,avgNight:2.2,bs:false},
+    {id:'br3',name:'Red Bull Sugar Free',unit:'Can',cost:2.5,par:8,reorder:8,onHand:17,avgWeek:4.2,avgNight:0.8,bs:false},
+    {id:'br4',name:'Sprite',unit:'Can',cost:1.0,par:8,reorder:8,onHand:16,avgWeek:4.0,avgNight:0.8,bs:false},
+    {id:'br5',name:'Mich Ultra',unit:'Bottle',cost:2.0,par:6,reorder:6,onHand:11,avgWeek:3.0,avgNight:0.6,bs:false},
+    {id:'br6',name:'Bud Light',unit:'Bottle',cost:2.0,par:6,reorder:6,onHand:12,avgWeek:1.5,avgNight:0.3,bs:false},
+    {id:'br7',name:'Heineken',unit:'Bottle',cost:2.5,par:6,reorder:6,onHand:9,avgWeek:1.0,avgNight:0.2,bs:false},
+    {id:'br8',name:'Budweiser',unit:'Bottle',cost:2.0,par:6,reorder:6,onHand:4,avgWeek:1.0,avgNight:0.2,bs:false},
+    {id:'br9',name:'Coke',unit:'Can',cost:1.0,par:6,reorder:8,onHand:0,avgWeek:1.5,avgNight:0.3,bs:false},
+    {id:'br10',name:'Ginger Ale',unit:'Can',cost:1.0,par:6,reorder:6,onHand:0,avgWeek:0.8,avgNight:0.2,bs:false},
+    {id:'br11',name:'Water (Bottled)',unit:'Bottle',cost:1.0,par:20,reorder:24,onHand:0,avgWeek:25.2,avgNight:5.0,bs:false},
+    {id:'br12',name:'Pineapple Juice',unit:'Can',cost:3.0,par:4,reorder:4,onHand:0,avgWeek:0.5,avgNight:0.1,bs:false},
   ],
   hookah:[
-    {id:'h1',name:'Shisha — Two Apples',unit:'250g Tin',cost:12,par:6,reorder:6,onHand:0},
-    {id:'h2',name:'Shisha — Watermelon Mint',unit:'250g Tin',cost:12,par:6,reorder:6,onHand:0},
-    {id:'h3',name:'Shisha — Blueberry Mint',unit:'250g Tin',cost:12,par:4,reorder:4,onHand:0},
-    {id:'h4',name:'Shisha — Peach',unit:'250g Tin',cost:12,par:4,reorder:4,onHand:0},
-    {id:'h5',name:'Shisha — Lemon Mint',unit:'250g Tin',cost:12,par:4,reorder:4,onHand:0},
-    {id:'h6',name:'Coconut Coals (Natural)',unit:'Box 72pc',cost:18,par:5,reorder:4,onHand:0},
-    {id:'h7',name:'Quick-Light Coals',unit:'Box 100pc',cost:10,par:3,reorder:3,onHand:0},
-    {id:'h8',name:'Hookah Foil / Pre-cut',unit:'100-pack',cost:10,par:4,reorder:4,onHand:0},
-    {id:'h9',name:'Disposable Mouth Tips',unit:'100-pack',cost:8,par:6,reorder:6,onHand:0},
-    {id:'h10',name:'Hookah Hoses',unit:'Each',cost:15,par:4,reorder:4,onHand:0},
-    {id:'h11',name:'Clay / Silicone Bowls',unit:'Each',cost:14,par:4,reorder:4,onHand:0},
-    {id:'h12',name:'Hookah Tongs',unit:'Each',cost:8,par:3,reorder:3,onHand:0},
+    {id:'h1',name:'Shisha — Two Apples',unit:'250g Tin',cost:12,par:6,reorder:6,onHand:0,bs:false},
+    {id:'h2',name:'Shisha — Watermelon Mint',unit:'250g Tin',cost:12,par:6,reorder:6,onHand:0,bs:false},
+    {id:'h3',name:'Shisha — Blueberry Mint',unit:'250g Tin',cost:12,par:4,reorder:4,onHand:0,bs:false},
+    {id:'h4',name:'Shisha — Peach',unit:'250g Tin',cost:12,par:4,reorder:4,onHand:0,bs:false},
+    {id:'h5',name:'Shisha — Lemon Mint',unit:'250g Tin',cost:12,par:4,reorder:4,onHand:0,bs:false},
+    {id:'h6',name:'Coconut Coals (Natural)',unit:'Box 72pc',cost:18,par:5,reorder:4,onHand:0,bs:false},
+    {id:'h7',name:'Quick-Light Coals',unit:'Box 100pc',cost:10,par:3,reorder:3,onHand:0,bs:false},
+    {id:'h8',name:'Hookah Foil / Pre-cut',unit:'100-pack',cost:10,par:4,reorder:4,onHand:0,bs:false},
+    {id:'h9',name:'Disposable Mouth Tips',unit:'100-pack',cost:8,par:6,reorder:6,onHand:0,bs:false},
+    {id:'h10',name:'Hookah Hoses',unit:'Each',cost:15,par:4,reorder:4,onHand:0,bs:false},
+    {id:'h11',name:'Clay / Silicone Bowls',unit:'Each',cost:14,par:4,reorder:4,onHand:0,bs:false},
+    {id:'h12',name:'Hookah Tongs',unit:'Each',cost:8,par:3,reorder:3,onHand:0,bs:false},
   ],
   supplies:[
-    {id:'s1',name:'Cocktail Napkins',unit:'500-pack',cost:12,par:3,reorder:4,onHand:0},
-    {id:'s2',name:'Straws',unit:'500-pack',cost:10,par:3,reorder:4,onHand:0},
-    {id:'s3',name:'Plastic Cups (16oz)',unit:'100-pack',cost:10,par:5,reorder:6,onHand:0},
-    {id:'s4',name:'Plastic Cups (12oz)',unit:'100-pack',cost:9,par:3,reorder:4,onHand:0},
-    {id:'s5',name:'Speed Pourers',unit:'12-pack',cost:14,par:2,reorder:2,onHand:0},
-    {id:'s6',name:'Ice Scoop',unit:'Each',cost:8,par:2,reorder:2,onHand:0},
-    {id:'s7',name:'Bar Mats',unit:'Each',cost:18,par:2,reorder:2,onHand:0},
-    {id:'s8',name:'Hand Sanitizer',unit:'Gallon',cost:15,par:2,reorder:3,onHand:0},
-    {id:'s9',name:'Paper Towels',unit:'12-pack',cost:18,par:2,reorder:3,onHand:0},
+    {id:'s1',name:'Cocktail Napkins',unit:'500-pack',cost:12,par:3,reorder:4,onHand:0,bs:false},
+    {id:'s2',name:'Straws',unit:'500-pack',cost:10,par:3,reorder:4,onHand:0,bs:false},
+    {id:'s3',name:'Plastic Cups (16oz)',unit:'100-pack',cost:10,par:5,reorder:6,onHand:0,bs:false},
+    {id:'s4',name:'Plastic Cups (12oz)',unit:'100-pack',cost:9,par:3,reorder:4,onHand:0,bs:false},
+    {id:'s5',name:'Speed Pourers',unit:'12-pack',cost:14,par:2,reorder:2,onHand:0,bs:false},
+    {id:'s6',name:'Ice Scoop',unit:'Each',cost:8,par:2,reorder:2,onHand:0,bs:false},
+    {id:'s7',name:'Bar Mats',unit:'Each',cost:18,par:2,reorder:2,onHand:0,bs:false},
+    {id:'s8',name:'Hand Sanitizer',unit:'Gallon',cost:15,par:2,reorder:3,onHand:0,bs:false},
+    {id:'s9',name:'Paper Towels',unit:'12-pack',cost:18,par:2,reorder:3,onHand:0,bs:false},
   ],
 };
 
-const CAT_LABELS = { bottles:'Bottle Service', tequila:'Tequila', whiskey:'Whiskey & Bourbon', vodka:'Vodka & Gin', specialty:'Specialty & Liqueurs', beer:'Beer & Mixers', hookah:'Hookah Supplies', supplies:'Bar Supplies' };
-const CAT_EMOJI  = { bottles:'🍾', tequila:'🥃', whiskey:'🥃', vodka:'🍸', specialty:'🍹', beer:'🍺', hookah:'💨', supplies:'🧴' };
+const CAT_LABELS={tequila:'Tequila',whiskey:'Whiskey & Bourbon',vodka:'Vodka & Gin',specialty:'Specialty & Liqueurs',beer:'Beer & Mixers',hookah:'Hookah Supplies',supplies:'Bar Supplies'};
+const CAT_EMOJI ={tequila:'🥃',whiskey:'🥃',vodka:'🍸',specialty:'🍹',beer:'🍺',hookah:'💨',supplies:'🧴'};
+const TAB_NAMES =['dashboard','tequila','whiskey','vodka','specialty','beer','hookah','supplies','orders','log'];
 
 let inventory = JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
 let countLog  = [];
+let teamNotes = [];
 let addCat    = null;
+let editNoteId = null;
 
-// ── SYNC UI ──────────────────────────────────────────────────
-function setSync(state) {
-  const dot = document.getElementById('syncDot');
-  const lbl = document.getElementById('syncLabel');
-  dot.className = 'sync-dot' + (state==='syncing' ? ' syncing' : state==='offline' ? ' offline' : '');
-  lbl.textContent = state==='syncing' ? 'Saving...' : state==='offline' ? 'Offline' : 'Live';
+// ── SYNC ─────────────────────────────────────────────────────
+function setSync(s){
+  const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel');
+  dot.className='sync-dot'+(s==='syncing'?' syncing':s==='offline'?' offline':'');
+  lbl.textContent=s==='syncing'?'Saving...':s==='offline'?'Offline':'Live';
 }
 
-// ── FIREBASE ─────────────────────────────────────────────────
-async function initApp() {
+async function initApp(){
   setSync('syncing');
-  onSnapshot(doc(db,'somewhere-clt','inventory'), snap => {
-    if(snap.exists()) {
-      const d = snap.data();
-      if(d.inventory) inventory = d.inventory;
-      if(d.countLog)  countLog  = d.countLog;
+  onSnapshot(doc(db,'somewhere-clt','inventory'),snap=>{
+    if(snap.exists()){
+      const d=snap.data();
+      if(d.inventory)  inventory  = d.inventory;
+      if(d.countLog)   countLog   = d.countLog;
+      if(d.teamNotes)  teamNotes  = d.teamNotes;
     }
     setSync('live');
     renderDashboard();
-    const activeTab = document.querySelector('.tab.active');
-    if(activeTab) {
-      const m = activeTab.getAttribute('onclick').match(/'(\w+)'/);
-      if(m && CAT_LABELS[m[1]]) renderCategory(m[1]);
-    }
-  }, () => setSync('offline'));
+    const active=document.querySelector('.tab.active');
+    if(active){const m=active.getAttribute('onclick').match(/'(\w+)'/);if(m&&CAT_LABELS[m[1]])renderCategory(m[1]);}
+  },()=>setSync('offline'));
 }
 
-window.saveToFirebase = async function() {
+window.saveToFirebase = async function(){
   setSync('syncing');
-  try {
-    await setDoc(doc(db,'somewhere-clt','inventory'), {
-      inventory, countLog,
-      lastUpdated: new Date().toISOString()
-    });
+  try{
+    await setDoc(doc(db,'somewhere-clt','inventory'),{inventory,countLog,teamNotes,lastUpdated:new Date().toISOString()});
     setSync('live');
-    const btn = document.getElementById('saveBtn');
+    const btn=document.getElementById('saveBtn');
     btn.textContent='SAVED ✓'; btn.classList.add('saved');
     showToast('SAVED TO CLOUD ✓');
-    setTimeout(()=>{ btn.textContent='SAVE COUNT'; btn.classList.remove('saved'); }, 2200);
-  } catch(e) {
-    setSync('offline');
-    showToast('SAVE FAILED — check connection');
-  }
+    setTimeout(()=>{btn.textContent='SAVE COUNT';btn.classList.remove('saved');},2200);
+  }catch(e){setSync('offline');showToast('SAVE FAILED — check connection');}
 };
 
 // ── STATUS ───────────────────────────────────────────────────
-function status(item) {
-  if(item.onHand<=0)             return 'out';
-  if(item.onHand<=item.par)      return 'low';
-  if(item.onHand<=item.par*1.5)  return 'warn';
-  return 'good';
+function status(item){
+  if(item.onHand<=0)return'out';
+  if(item.onHand<=item.par)return'low';
+  if(item.onHand<=item.par*1.5)return'warn';
+  return'good';
 }
-function statusLabel(s) {
-  return {out:'OUT OF STOCK',low:'LOW — ORDER NOW',warn:'Getting Low',good:'Good'}[s];
-}
+function statusLabel(s){return{out:'OUT OF STOCK',low:'LOW — ORDER NOW',warn:'Getting Low',good:'Good'}[s];}
 
 // ── RENDER CATEGORY ──────────────────────────────────────────
-function renderCategory(catKey) {
-  const items = inventory[catKey]||[];
-  const el    = document.getElementById('tab-'+catKey);
-  if(!el) return;
-  const sorted = [...items].sort((a,b)=>({out:0,low:1,warn:2,good:3})[status(a)]-({out:0,low:1,warn:2,good:3})[status(b)]);
-  let h = `<div class="sec-hdr"><div class="sec-title">${CAT_EMOJI[catKey]} ${CAT_LABELS[catKey]}</div><div class="sec-count">${items.length} products</div></div><div class="item-list">`;
-  sorted.forEach(item => {
-    const s = status(item);
-    const needOrder = item.onHand <= item.par;
-    const hasAvg = item.avgWeek > 0;
-    h += `<div class="item-card s-${s}" id="card-${item.id}">
+function renderCategory(catKey){
+  const items=inventory[catKey]||[];
+  const el=document.getElementById('tab-'+catKey);
+  if(!el)return;
+  const sorted=[...items].sort((a,b)=>({out:0,low:1,warn:2,good:3})[status(a)]-({out:0,low:1,warn:2,good:3})[status(b)]);
+  let h=`<div class="sec-hdr"><div class="sec-title">${CAT_EMOJI[catKey]} ${CAT_LABELS[catKey]}</div><div class="sec-count">${items.length} items</div></div><div class="item-list">`;
+  sorted.forEach(item=>{
+    const s=status(item),needOrder=item.onHand<=item.par,hasAvg=item.avgWeek>0;
+    h+=`<div class="item-card s-${s}" id="card-${item.id}">
       <div>
         <div class="item-name">${item.name}</div>
         <div class="item-pills">
@@ -652,6 +589,7 @@ function renderCategory(catKey) {
           <span class="pill">Par <strong>${item.par}</strong></span>
           <span class="pill">$<strong>${item.cost}</strong></span>
           ${hasAvg?`<span class="pill">~<strong>${item.avgWeek}</strong>/wk</span>`:''}
+          ${item.bs?`<span class="bs-tag">🍾 Bottle Service</span>`:''}
         </div>
         ${needOrder?`<div class="order-chip">Order ${item.reorder} units</div>`:''}
       </div>
@@ -667,13 +605,13 @@ function renderCategory(catKey) {
       </div>
     </div>`;
   });
-  h += `</div><button class="add-btn" onclick="openAddModal('${catKey}')">+ Add Product to ${CAT_LABELS[catKey]}</button>`;
-  el.innerHTML = h;
+  h+=`</div><button class="add-btn" onclick="openAddModal('${catKey}')">+ Add Product to ${CAT_LABELS[catKey]}</button>`;
+  el.innerHTML=h;
 }
 
 // ── RENDER DASHBOARD ─────────────────────────────────────────
-function renderDashboard() {
-  let out=0,low=0,good=0; const crits=[];
+function renderDashboard(){
+  let out=0,low=0,good=0;const crits=[];
   Object.keys(inventory).forEach(k=>{
     (inventory[k]||[]).forEach(item=>{
       const s=status(item);
@@ -682,35 +620,96 @@ function renderDashboard() {
       else good++;
     });
   });
-  document.getElementById('stat-out').textContent  = out;
-  document.getElementById('stat-low').textContent  = low;
-  document.getElementById('stat-good').textContent = good;
-  const wrap = document.getElementById('alerts-wrap');
+  document.getElementById('stat-out').textContent=out;
+  document.getElementById('stat-low').textContent=low;
+  document.getElementById('stat-good').textContent=good;
+  const wrap=document.getElementById('alerts-wrap');
   if(!crits.length){
     wrap.innerHTML=`<div style="background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.18);border-radius:10px;padding:14px;text-align:center;color:var(--green);font-weight:600;margin-bottom:18px;">✓ All items above par — you're good!</div>`;
-    return;
+  } else {
+    let h=`<div class="alerts-wrap"><div class="alerts-hdr">🚨 Needs Attention (${crits.length})</div>`;
+    crits.slice(0,8).forEach(item=>{h+=`<div class="alert-row"><span class="alert-name">${item.name}</span><span class="alert-act">${status(item)==='out'?'OUT — Order '+item.reorder:'Low — Order '+item.reorder}</span></div>`;});
+    if(crits.length>8)h+=`<div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">+${crits.length-8} more in category tabs</div>`;
+    h+=`</div>`;
+    wrap.innerHTML=h;
   }
-  let h=`<div class="alerts-wrap"><div class="alerts-hdr">🚨 Needs Attention (${crits.length})</div>`;
-  crits.slice(0,8).forEach(item=>{
-    h+=`<div class="alert-row"><span class="alert-name">${item.name}</span><span class="alert-act">${status(item)==='out'?'OUT — Order '+item.reorder:'Low — Order '+item.reorder}</span></div>`;
-  });
-  if(crits.length>8) h+=`<div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">+${crits.length-8} more in category tabs</div>`;
-  h+=`</div>`;
-  wrap.innerHTML=h;
+  renderNotes();
 }
 
-// ── RENDER ORDERS ────────────────────────────────────────────
-function renderOrders() {
-  const list = document.getElementById('order-list');
-  const byCat = {};
-  Object.keys(inventory).forEach(k=>{ const n=(inventory[k]||[]).filter(i=>i.onHand<=i.par); if(n.length) byCat[k]=n; });
-  if(!Object.keys(byCat).length){ list.innerHTML=`<div class="empty"><div class="ico">✅</div><p>Nothing to order — all items above par.</p></div>`; return; }
+// ── NOTES ────────────────────────────────────────────────────
+function renderNotes(){
+  const list=document.getElementById('notes-list');
+  if(!teamNotes.length){list.innerHTML='<div class="notes-empty">No notes yet — add something for the team to see</div>';return;}
+  const sorted=[...teamNotes].sort((a,b)=>(b.priority||0)-(a.priority||0)||(b.ts||0)-(a.ts||0));
+  let h='';
+  sorted.forEach(note=>{
+    h+=`<div class="note-card${note.priority?' priority':''}">
+      <div class="note-top">
+        <div class="note-text">${note.priority?'<span class="priority-badge">Priority</span>':''}${note.text}</div>
+        <div class="note-actions">
+          <button class="note-btn" onclick="editNote('${note.id}')" title="Edit">✏️</button>
+          <button class="note-btn" onclick="deleteNote('${note.id}')" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div class="note-meta">${note.author} · ${note.date}</div>
+    </div>`;
+  });
+  list.innerHTML=h;
+}
+
+window.openNoteModal = function(){
+  editNoteId=null;
+  document.getElementById('noteModalTitle').textContent='Add Note';
+  document.getElementById('noteText').value='';
+  document.getElementById('noteAuthor').value='';
+  document.getElementById('notePriority').value='0';
+  openModal('noteModal');
+};
+
+window.editNote = function(id){
+  const note=teamNotes.find(n=>n.id===id); if(!note)return;
+  editNoteId=id;
+  document.getElementById('noteModalTitle').textContent='Edit Note';
+  document.getElementById('noteText').value=note.text;
+  document.getElementById('noteAuthor').value=note.author;
+  document.getElementById('notePriority').value=note.priority?'1':'0';
+  openModal('noteModal');
+};
+
+window.deleteNote = function(id){
+  teamNotes=teamNotes.filter(n=>n.id!==id);
+  renderNotes();
+  saveToFirebase();
+};
+
+window.confirmNote = function(){
+  const text=document.getElementById('noteText').value.trim(); if(!text)return;
+  const author=document.getElementById('noteAuthor').value.trim()||'Team';
+  const priority=document.getElementById('notePriority').value==='1';
+  const date=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  if(editNoteId){
+    const note=teamNotes.find(n=>n.id===editNoteId);
+    if(note){note.text=text;note.author=author;note.priority=priority;note.date=date;}
+  } else {
+    teamNotes.push({id:'n'+Date.now(),text,author,priority,date,ts:Date.now()});
+  }
+  closeModal('noteModal');
+  renderNotes();
+  saveToFirebase();
+};
+
+// ── RENDER ORDERS ─────────────────────────────────────────────
+function renderOrders(){
+  const list=document.getElementById('order-list');
+  const byCat={};
+  Object.keys(inventory).forEach(k=>{const n=(inventory[k]||[]).filter(i=>i.onHand<=i.par);if(n.length)byCat[k]=n;});
+  if(!Object.keys(byCat).length){list.innerHTML=`<div class="empty"><div class="ico">✅</div><p>Nothing to order — all items above par.</p></div>`;return;}
   let h='';
   Object.keys(byCat).forEach(k=>{
     h+=`<div class="order-sec"><div class="order-sec-title">${CAT_EMOJI[k]} ${CAT_LABELS[k]}</div>`;
     byCat[k].forEach(item=>{
       h+=`<div class="order-row" id="ord-${item.id}">
-        <div><div class="order-name">${item.name}</div><div class="order-meta">On Hand: ${item.onHand} · Par: ${item.par}</div></div>
+        <div><div class="order-name">${item.name}${item.bs?' <span class="bs-tag">🍾 BS</span>':''}</div><div class="order-meta">On Hand: ${item.onHand} · Par: ${item.par}</div></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="order-qty">Order ${item.reorder}</span>
           <input type="checkbox" class="order-cb" onchange="this.closest('.order-row').classList.toggle('checked',this.checked)">
@@ -723,9 +722,9 @@ function renderOrders() {
 }
 
 // ── RENDER LOG ───────────────────────────────────────────────
-function renderLog() {
-  const list = document.getElementById('log-list');
-  if(!countLog.length){ list.innerHTML=`<div class="empty"><div class="ico">📋</div><p>No counts logged yet.</p></div>`; return; }
+function renderLog(){
+  const list=document.getElementById('log-list');
+  if(!countLog.length){list.innerHTML=`<div class="empty"><div class="ico">📋</div><p>No counts logged yet.</p></div>`;return;}
   let h='';
   [...countLog].reverse().forEach(e=>{
     h+=`<div class="log-entry"><div class="log-top"><span class="log-date">${e.date}</span><span class="log-who">${e.name}</span></div>
@@ -737,79 +736,79 @@ function renderLog() {
 }
 
 // ── INTERACTIONS ─────────────────────────────────────────────
-window.adjust = function(catKey,id,delta) {
-  const item=(inventory[catKey]||[]).find(i=>i.id===id); if(!item)return;
+window.adjust=function(catKey,id,delta){
+  const item=(inventory[catKey]||[]).find(i=>i.id===id);if(!item)return;
   item.onHand=Math.max(0,Math.round((item.onHand+delta)*100)/100);
-  const inp=document.querySelector(`#card-${id} .step-inp`); if(inp)inp.value=item.onHand;
+  const inp=document.querySelector(`#card-${id} .step-inp`);if(inp)inp.value=item.onHand;
   refreshCard(catKey,id);
 };
-window.updateQty = function(catKey,id,val) {
-  const item=(inventory[catKey]||[]).find(i=>i.id===id); if(!item)return;
-  const n=parseFloat(val); if(!isNaN(n)&&n>=0){item.onHand=n;refreshCard(catKey,id);}
+window.updateQty=function(catKey,id,val){
+  const item=(inventory[catKey]||[]).find(i=>i.id===id);if(!item)return;
+  const n=parseFloat(val);if(!isNaN(n)&&n>=0){item.onHand=n;refreshCard(catKey,id);}
 };
-function refreshCard(catKey,id) {
-  const item=(inventory[catKey]||[]).find(i=>i.id===id); if(!item)return;
+function refreshCard(catKey,id){
+  const item=(inventory[catKey]||[]).find(i=>i.id===id);if(!item)return;
   const s=status(item);
-  const card=document.getElementById('card-'+item.id); if(!card)return;
+  const card=document.getElementById('card-'+item.id);if(!card)return;
   card.className=`item-card s-${s}`;
   card.querySelector('.badge').className=`badge badge-${s}`;
   card.querySelector('.badge').textContent=statusLabel(s);
   const chip=card.querySelector('.order-chip');
-  if(item.onHand<=item.par){ if(!chip){const d=document.createElement('div');d.className='order-chip';d.textContent=`Order ${item.reorder} units`;card.querySelector('.item-pills').after(d);} }
-  else { if(chip)chip.remove(); }
+  if(item.onHand<=item.par){if(!chip){const d=document.createElement('div');d.className='order-chip';d.textContent=`Order ${item.reorder} units`;card.querySelector('.item-pills').after(d);}}
+  else{if(chip)chip.remove();}
 }
 
-// ── MODALS ───────────────────────────────────────────────────
-window.openAddModal = function(catKey) {
+// ── ADD ITEM ─────────────────────────────────────────────────
+window.openAddModal=function(catKey){
   addCat=catKey;
   ['nName','nUnit','nCost','nPar','nReorder'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nBs').value='0';
   openModal('addModal');
 };
-window.confirmAdd = function() {
-  const name=document.getElementById('nName').value.trim(); if(!name)return;
+window.confirmAdd=function(){
+  const name=document.getElementById('nName').value.trim();if(!name)return;
   const unit=document.getElementById('nUnit').value.trim()||'750ml';
   const cost=parseFloat(document.getElementById('nCost').value)||0;
   const par=parseInt(document.getElementById('nPar').value)||1;
   const reorder=parseInt(document.getElementById('nReorder').value)||par;
-  inventory[addCat].push({id:'c'+Date.now(),name,unit,cost,par,reorder,onHand:0});
-  closeModal('addModal'); renderCategory(addCat);
+  const bs=document.getElementById('nBs').value==='1';
+  inventory[addCat].push({id:'c'+Date.now(),name,unit,cost,par,reorder,onHand:0,bs});
+  closeModal('addModal');renderCategory(addCat);
 };
-window.openLogModal = function() {
+
+// ── LOG MODAL ────────────────────────────────────────────────
+window.openLogModal=function(){
   ['lName','lCats','lNotes'].forEach(id=>document.getElementById(id).value='');
   openModal('logModal');
 };
-window.confirmLog = function() {
+window.confirmLog=function(){
   const name=document.getElementById('lName').value.trim()||'Unknown';
   const cats=document.getElementById('lCats').value.trim()||'All';
   const orders=document.getElementById('lOrders').value;
   const notes=document.getElementById('lNotes').value.trim();
   const date=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   countLog.push({date,name,cats,orders,notes});
-  closeModal('logModal'); renderLog();
+  closeModal('logModal');renderLog();
 };
-window.clearCheckedOrders = function() { document.querySelectorAll('.order-row.checked').forEach(r=>r.remove()); };
-window.openModal  = id=>document.getElementById(id).classList.add('open');
-window.closeModal = id=>document.getElementById(id).classList.remove('open');
+
+window.clearCheckedOrders=function(){document.querySelectorAll('.order-row.checked').forEach(r=>r.remove());};
+window.openModal =id=>document.getElementById(id).classList.add('open');
+window.closeModal=id=>document.getElementById(id).classList.remove('open');
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
 // ── TABS ─────────────────────────────────────────────────────
-const TAB_NAMES=['dashboard','bottles','tequila','whiskey','vodka','specialty','beer','hookah','supplies','orders','log'];
-window.showTab = function(tab) {
+window.showTab=function(tab){
   document.querySelectorAll('[id^=tab-]').forEach(el=>el.classList.add('hidden'));
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.remove('hidden');
   document.querySelectorAll('.tab')[TAB_NAMES.indexOf(tab)]?.classList.add('active');
-  if(CAT_LABELS[tab]) renderCategory(tab);
-  if(tab==='dashboard') renderDashboard();
-  if(tab==='orders') renderOrders();
-  if(tab==='log') renderLog();
+  if(CAT_LABELS[tab])renderCategory(tab);
+  if(tab==='dashboard')renderDashboard();
+  if(tab==='orders')renderOrders();
+  if(tab==='log')renderLog();
 };
 
-// ── TOAST ────────────────────────────────────────────────────
-window.showToast = function(msg) {
-  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2400);
-};
+window.showToast=function(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);};
 </script>
 </body>
 </html>
