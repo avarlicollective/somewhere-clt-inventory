@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Somewhere CLT — Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black:       #08080f;
+    --deep:        #0d0d1a;
+    --dark:        #12102a;
+    --panel:       #1a1535;
+    --card:        #1e1845;
+    --border:      #2d2060;
+    --purple:      #6b21a8;
+    --purple-mid:  #8b3fd4;
+    --neon:        #ff2eee;
+    --neon-dim:    #c020b0;
+    --neon-glow:   rgba(255,46,238,0.15);
+    --lavender:    #dd88ff;
+    --white:       #ffffff;
+    --off-white:   #e8e0ff;
+    --muted:       #8877aa;
+    --red:         #ff3355;
+    --orange:      #ff8c00;
+    --yellow:      #ffd700;
+    --green:       #00e676;
+    --green-dim:   #00b858;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--off-white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top:0; z-index:100;
+    background: linear-gradient(180deg, var(--deep) 0%, rgba(13,13,26,0.97) 100%);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    padding: 0 20px;
+  }
+  .header-inner {
+    max-width: 900px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 3px;
+    color: var(--neon);
+    text-shadow: 0 0 20px var(--neon-dim), 0 0 40px rgba(255,46,238,0.3);
+  }
+  .logo span {
+    color: var(--lavender);
+    font-size: 13px;
+    display: block;
+    letter-spacing: 4px;
+    margin-top: -6px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+  }
+  .last-updated {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .last-updated strong { color: var(--lavender); display:block; }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 900px; margin: 0 auto;
+    padding: 24px 20px 80px;
+    position: relative; z-index:1;
+  }
+
+  /* ── SECTION TABS ── */
+  .tabs {
+    display: flex; gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 24px;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab:hover { border-color: var(--purple-mid); color: var(--lavender); }
+  .tab.active {
+    background: var(--purple);
+    border-color: var(--neon);
+    color: var(--white);
+    box-shadow: 0 0 16px rgba(255,46,238,0.2);
+  }
+
+  /* ── DASHBOARD STATS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media(min-width:600px) { .stats-grid { grid-template-columns: repeat(4,1fr); } }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .stat-card.critical::before { background: var(--red); }
+  .stat-card.low::before      { background: var(--orange); }
+  .stat-card.good::before     { background: var(--green); }
+  .stat-card.revenue::before  { background: var(--neon); }
+  .stat-label {
+    font-size: 11px; font-weight:500;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; letter-spacing: 1px;
+    line-height: 1;
+  }
+  .stat-card.critical .stat-value { color: var(--red); }
+  .stat-card.low .stat-value      { color: var(--orange); }
+  .stat-card.good .stat-value     { color: var(--green); }
+  .stat-card.revenue .stat-value  { color: var(--neon); }
+  .stat-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; margin-top: 8px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px;
+    color: var(--lavender);
+  }
+  .section-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--muted);
+  }
+
+  /* ── INVENTORY ITEM CARD ── */
+  .item-list { display:flex; flex-direction:column; gap:8px; }
+
+  .item-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .item-card::before {
+    content:'';
+    position:absolute; left:0; top:0; bottom:0; width:3px;
+    border-radius: 10px 0 0 10px;
+  }
+  .item-card.status-out    { border-color: rgba(255,51,85,0.4); }
+  .item-card.status-out::before    { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .item-card.status-low    { border-color: rgba(255,140,0,0.4); }
+  .item-card.status-low::before    { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+  .item-card.status-warn   { border-color: rgba(255,215,0,0.3); }
+  .item-card.status-warn::before   { background: var(--yellow); }
+  .item-card.status-good   { border-color: var(--border); }
+  .item-card.status-good::before   { background: var(--green-dim); }
+
+  .item-left { min-width: 0; }
+  .item-name {
+    font-weight: 600; font-size: 14px;
+    color: var(--white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .item-meta {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .item-meta-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--muted);
+  }
+  .item-meta-pill strong { color: var(--lavender); }
+
+  .item-right {
+    display: flex; flex-direction: column;
+    align-items: flex-end; gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── STATUS BADGE ── */
+  .badge {
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+    white-space: nowrap; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-out  { background: rgba(255,51,85,0.15);  color: var(--red);    border:1px solid rgba(255,51,85,0.3); }
+  .badge-low  { background: rgba(255,140,0,0.15);  color: var(--orange); border:1px solid rgba(255,140,0,0.3); }
+  .badge-warn { background: rgba(255,215,0,0.1);   color: var(--yellow); border:1px solid rgba(255,215,0,0.2); }
+  .badge-good { background: rgba(0,230,118,0.1);   color: var(--green);  border:1px solid rgba(0,230,118,0.2); }
+
+  /* ── COUNT STEPPER ── */
+  .stepper {
+    display: flex; align-items: center; gap: 0;
+    background: var(--dark); border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .stepper-btn {
+    width: 32px; height: 32px;
+    background: transparent;
+    border: none; cursor: pointer;
+    color: var(--lavender); font-size: 18px; font-weight: 300;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .stepper-btn:hover { background: var(--panel); }
+  .stepper-btn:active { background: var(--purple); }
+  .stepper-input {
+    width: 48px; height: 32px;
+    background: transparent; border: none;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    color: var(--white);
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .stepper-input::-webkit-outer-spin-button,
+  .stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* ── ORDER NEEDED TAG ── */
+  .order-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--orange);
+    background: rgba(255,140,0,0.08);
+    border: 1px solid rgba(255,140,0,0.2);
+    border-radius: 4px; padding: 2px 6px;
+  }
+
+  /* ── CRITICAL ALERTS BANNER ── */
+  .alerts-banner {
+    background: linear-gradient(135deg, rgba(255,51,85,0.08), rgba(255,140,0,0.05));
+    border: 1px solid rgba(255,51,85,0.25);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  .alerts-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 2px;
+    color: var(--red); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .alert-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+  }
+  .alert-item:last-child { border-bottom: none; padding-bottom:0; }
+  .alert-name { color: var(--white); font-weight: 500; }
+  .alert-action { font-family:'DM Mono',monospace; font-size:11px; color:var(--orange); }
+
+  /* ── SAVE BUTTON ── */
+  .save-bar {
+    position: fixed; bottom:0; left:0; right:0;
+    background: linear-gradient(0deg, var(--deep) 60%, transparent);
+    padding: 16px 20px 20px;
+    z-index: 50;
+    display: flex; justify-content: center;
+  }
+  .save-btn {
+    background: var(--neon);
+    color: var(--black);
+    border: none; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 3px;
+    padding: 14px 48px; border-radius: 8px;
+    box-shadow: 0 0 24px rgba(255,46,238,0.4);
+    transition: all 0.2s;
+    width: 100%; max-width: 400px;
+  }
+  .save-btn:hover {
+    background: var(--white);
+    box-shadow: 0 0 32px rgba(255,46,238,0.6);
+    transform: translateY(-1px);
+  }
+  .save-btn:active { transform: translateY(0); }
+  .save-btn.saved {
+    background: var(--green);
+    box-shadow: 0 0 24px rgba(0,230,118,0.4);
+  }
+
+  /* ── ORDER SHEET VIEW ── */
+  .order-section { margin-bottom: 20px; }
+  .order-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--muted);
+    margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .order-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 6px;
+  }
+  .order-row-name { font-weight:500; color:var(--white); font-size:13px; }
+  .order-row-qty {
+    font-family:'DM Mono',monospace; font-size:12px;
+    color: var(--neon); font-weight:600;
+  }
+  .order-check {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .order-check input[type=checkbox] {
+    width:16px; height:16px; cursor:pointer;
+    accent-color: var(--neon);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align:center; padding: 48px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size:40px; margin-bottom:12px; }
+  .empty-state p { font-size:14px; }
+
+  /* ── REVENUE INSIGHTS ── */
+  .revenue-bar {
+    margin-bottom: 10px;
+  }
+  .revenue-bar-label {
+    display:flex; justify-content:space-between;
+    font-size:12px; margin-bottom:4px;
+  }
+  .revenue-bar-label span:first-child { color:var(--off-white); }
+  .revenue-bar-label span:last-child  { font-family:'DM Mono',monospace; color:var(--neon); }
+  .revenue-bar-track {
+    height:6px; background:var(--dark); border-radius:3px; overflow:hidden;
+  }
+  .revenue-bar-fill {
+    height:100%; border-radius:3px;
+    background: linear-gradient(90deg, var(--purple), var(--neon));
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── TOAST NOTIFICATION ── */
+  .toast {
+    position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
+    background: var(--green); color: var(--black);
+    font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
+    padding: 12px 24px; border-radius:8px;
+    box-shadow: 0 4px 24px rgba(0,230,118,0.4);
+    opacity:0; transition: all 0.3s; z-index:200;
+    pointer-events:none;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.8);
+    z-index:150; display:flex; align-items:center; justify-content:center;
+    padding:20px; opacity:0; pointer-events:none; transition:opacity 0.2s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background: var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:24px; width:100%; max-width:400px;
+    transform:translateY(20px); transition:transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+  .modal-title {
+    font-family:'Bebas Neue',sans-serif; font-size:22px;
+    letter-spacing:2px; color:var(--neon); margin-bottom:16px;
+  }
+  .modal-field { margin-bottom:14px; }
+  .modal-field label {
+    display:block; font-size:11px; text-transform:uppercase;
+    letter-spacing:1.5px; color:var(--muted); margin-bottom:6px;
+  }
+  .modal-field input, .modal-field select {
+    width:100%; background:var(--dark); border:1px solid var(--border);
+    border-radius:6px; padding:10px 12px;
+    color:var(--white); font-family:'DM Sans',sans-serif; font-size:14px;
+    outline:none; transition:border-color 0.2s;
+  }
+  .modal-field input:focus, .modal-field select:focus { border-color:var(--neon); }
+  .modal-field select option { background:var(--dark); }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .btn-primary {
+    flex:1; background:var(--neon); color:var(--black);
+    border:none; cursor:pointer; border-radius:6px;
+    font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
+    padding:12px; transition:all 0.2s;
+  }
+  .btn-primary:hover { background:var(--white); }
+  .btn-secondary {
+    flex:1; background:transparent; color:var(--muted);
+    border:1px solid var(--border); cursor:pointer; border-radius:6px;
+    font-family:'DM Sans',sans-serif; font-size:14px;
+    padding:12px; transition:all 0.2s;
+  }
+  .btn-secondary:hover { border-color:var(--purple-mid); color:var(--lavender); }
+
+  /* ── ADD ITEM BTN ── */
+  .add-item-btn {
+    width:100%; padding:12px;
+    background:transparent; border:1px dashed var(--border);
+    border-radius:10px; color:var(--muted);
+    cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px;
+    transition:all 0.2s; margin-top:8px;
+  }
+  .add-item-btn:hover { border-color:var(--purple-mid); color:var(--lavender); background:var(--panel); }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      Somewhere CLT
+      <span>INVENTORY SYSTEM</span>
+    </div>
+    <div class="last-updated">
+      <strong id="lastUpdatedDisplay">Never</strong>
+      Last Updated
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+    <div class="tab" onclick="showTab('bottles')">🍾 Bottle Service</div>
+    <div class="tab" onclick="showTab('tequila')">🥃 Tequila</div>
+    <div class="tab" onclick="showTab('whiskey')">🥃 Whiskey</div>
+    <div class="tab" onclick="showTab('vodka')">🍸 Vodka & Gin</div>
+    <div class="tab" onclick="showTab('specialty')">🍹 Specialty</div>
+    <div class="tab" onclick="showTab('beer')">🍺 Beer & Mixers</div>
+    <div class="tab" onclick="showTab('hookah')">💨 Hookah</div>
+    <div class="tab" onclick="showTab('supplies')">🧴 Supplies</div>
+    <div class="tab" onclick="showTab('orders')">🛒 Order Sheet</div>
+    <div class="tab" onclick="showTab('log')">📋 Count Log</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card critical">
+        <div class="stat-label">Out of Stock</div>
+        <div class="stat-value" id="stat-out">0</div>
+        <div class="stat-sub">items need ordering</div>
+      </div>
+      <div class="stat-card low">
+        <div class="stat-label">Low Stock</div>
+        <div class="stat-value" id="stat-low">0</div>
+        <div class="stat-sub">at or below par</div>
+      </div>
+      <div class="stat-card good">
+        <div class="stat-label">Well Stocked</div>
+        <div class="stat-value" id="stat-good">0</div>
+        <div class="stat-sub">items above par</div>
+      </div>
+      <div class="stat-card revenue">
+        <div class="stat-label">28-Day Revenue</div>
+        <div class="stat-value">$35.4K</div>
+        <div class="stat-sub">Feb 8 – Mar 8</div>
+      </div>
+    </div>
+
+    <div id="alerts-container"></div>
+
+    <div class="section-header">
+      <div class="section-title">Revenue Breakdown</div>
+      <div class="section-count">Feb 8 – Mar 8 · 28 days</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;">
+      <div class="revenue-bar"><div class="revenue-bar-label"><span>Full Bottle Service</span><span>$15,972 · 45.1%</span></div><div class="revenue-bar-track"><div class="revenue-bar-fill" style="width:45.1%"></div></div></div>
+      <div class="revenue-bar"><div class="revenue-bar-label"><span>Tequila (shots/pours)</span><span>$8,198 · 23.1%</span></div><div class="revenue-bar-track"><div class="revenue-bar-fill" style="width:23.1%"></div></div></div>
+      <div class="revenue-bar"><div class="revenue-bar-label"><span>Hookah</span><span>$3,310 · 9.3%</span></div><div class="revenue-bar-track"><div class="revenue-bar-fill" style="width:9.3%"></div></div></div>
+      <div class="revenue-bar"><div class="revenue-bar-label"><span>Whiskey / Bourbon</span><span>$1,841 · 5.2%</span></div><div class="revenue-bar-track"><div class="revenue-bar-fill" style="width:5.2%"></div></div></div>
+      <div class="revenue-bar"><div class="revenue-bar-label"><span>Beer & Mixers</span><span>$1,488 · 4.2%</span></div><div class="revenue-bar-track"><div class="revenue-bar-fill" style="width:4.2%"></div></div></div>
+      <div class="revenue-bar"><div class="revenue-bar-label"><span>Vodka</span><span>$438 · 1.2%</span></div><div class="revenue-bar-track"><div class="revenue-bar-fill" style="width:1.2%"></div></div></div>
+    </div>
+  </div>
+
+  <!-- CATEGORY TABS (dynamically rendered) -->
+  <div id="tab-bottles"  class="hidden"></div>
+  <div id="tab-tequila"  class="hidden"></div>
+  <div id="tab-whiskey"  class="hidden"></div>
+  <div id="tab-vodka"    class="hidden"></div>
+  <div id="tab-specialty" class="hidden"></div>
+  <div id="tab-beer"     class="hidden"></div>
+  <div id="tab-hookah"   class="hidden"></div>
+  <div id="tab-supplies" class="hidden"></div>
+
+  <!-- ORDER SHEET -->
+  <div id="tab-orders" class="hidden">
+    <div class="section-header">
+      <div class="section-title">Order Sheet</div>
+      <button class="btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="clearOrders()">Clear Checked</button>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Items at or below par level. Check off as you place each order.</p>
+    <div id="order-list"></div>
+  </div>
+
+  <!-- COUNT LOG -->
+  <div id="tab-log" class="hidden">
+    <div class="section-header">
+      <div class="section-title">Count Log</div>
+      <button class="btn-primary" style="padding:8px 16px;font-size:14px;letter-spacing:1px;" onclick="openLogModal()">+ Log Count</button>
+    </div>
+    <div id="log-list">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>No counts logged yet.<br>Complete your first count and log it here.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <button class="save-btn" id="saveBtn" onclick="saveAll()">SAVE COUNT</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">COUNT SAVED ✓</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-title">Add Product</div>
+    <div class="modal-field">
+      <label>Product Name</label>
+      <input type="text" id="newName" placeholder="e.g. Don Julio Blanco">
+    </div>
+    <div class="modal-field">
+      <label>Unit Size</label>
+      <input type="text" id="newUnit" placeholder="e.g. 750ml">
+    </div>
+    <div class="modal-field">
+      <label>Cost per Unit ($)</label>
+      <input type="number" id="newCost" placeholder="0.00" step="0.01">
+    </div>
+    <div class="modal-field">
+      <label>Par Level</label>
+      <input type="number" id="newPar" placeholder="3" min="0">
+    </div>
+    <div class="modal-field">
+      <label>Reorder Quantity</label>
+      <input type="number" id="newReorder" placeholder="4" min="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmAdd()">Add Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG MODAL -->
+<div class="modal-overlay" id="logModal">
+  <div class="modal">
+    <div class="modal-title">Log Count Session</div>
+    <div class="modal-field">
+      <label>Counted By</label>
+      <input type="text" id="logName" placeholder="Your name">
+    </div>
+    <div class="modal-field">
+      <label>Categories Counted</label>
+      <input type="text" id="logCats" placeholder="e.g. Liquor, Beer, Hookah">
+    </div>
+    <div class="modal-field">
+      <label>Orders Placed?</label>
+      <select id="logOrders">
+        <option value="Pending">Pending</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Notes</label>
+      <input type="text" id="logNotes" placeholder="Any issues or observations">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeLogModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmLog()">Save Log Entry</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+const CATEGORIES = {
+  bottles:   { label:'Bottle Service',      emoji:'🍾' },
+  tequila:   { label:'Tequila',             emoji:'🥃' },
+  whiskey:   { label:'Whiskey & Bourbon',   emoji:'🥃' },
+  vodka:     { label:'Vodka & Gin',         emoji:'🍸' },
+  specialty: { label:'Specialty & Liqueurs',emoji:'🍹' },
+  beer:      { label:'Beer & Mixers',       emoji:'🍺' },
+  hookah:    { label:'Hookah Supplies',     emoji:'💨' },
+  supplies:  { label:'Bar Supplies',        emoji:'🧴' },
+};
+
+const DEFAULT_INVENTORY = {
+  bottles: [
+    {id:'b1', name:'Don Julio Repo — Full Bottle',    unit:'750ml', cost:175, par:12, reorder:12, onHand:50,  avgWeek:12.5, avgNight:2.5},
+    {id:'b2', name:'Don Julio 1942 — Full Bottle',    unit:'750ml', cost:350, par:3,  reorder:3,  onHand:4,   avgWeek:1.0,  avgNight:0.2},
+    {id:'b3', name:'La Gritona — Full Bottle',        unit:'750ml', cost:180, par:2,  reorder:2,  onHand:3,   avgWeek:0.8,  avgNight:0.1},
+    {id:'b4', name:'Casa Migos Rep — Full Bottle',    unit:'750ml', cost:160, par:2,  reorder:2,  onHand:0,   avgWeek:0.5,  avgNight:0.1},
+    {id:'b5', name:'Hennessy VSOP — Full Bottle',     unit:'750ml', cost:110, par:2,  reorder:2,  onHand:0,   avgWeek:0.5,  avgNight:0.1},
+    {id:'b6', name:'Jagermeister — Full Bottle',      unit:'750ml', cost:90,  par:2,  reorder:2,  onHand:0,   avgWeek:0.5,  avgNight:0.1},
+    {id:'b7', name:"Tito's — Full Bottle",            unit:'750ml', cost:80,  par:2,  reorder:2,  onHand:0,   avgWeek:0.2,  avgNight:0.1},
+    {id:'b8', name:'Belaire Rose — Full Bottle',      unit:'750ml', cost:80,  par:2,  reorder:2,  onHand:1,   avgWeek:0.2,  avgNight:0.1},
+  ],
+  tequila: [
+    {id:'t1', name:'Don Julio Reposado',   unit:'750ml', cost:45, par:10, reorder:10, onHand:1,    avgWeek:4.6, avgNight:0.9},
+    {id:'t2', name:'Luna Azul Reposado',   unit:'750ml', cost:18, par:4,  reorder:4,  onHand:1.25, avgWeek:1.6, avgNight:0.3},
+    {id:'t3', name:'Casa Migos Reposado',  unit:'750ml', cost:40, par:3,  reorder:3,  onHand:0,    avgWeek:1.2, avgNight:0.2},
+    {id:'t4', name:'La Gritona',           unit:'750ml', cost:28, par:3,  reorder:3,  onHand:7,    avgWeek:0.7, avgNight:0.1},
+    {id:'t5', name:'Teremana Reposado',    unit:'750ml', cost:22, par:2,  reorder:3,  onHand:0,    avgWeek:0.9, avgNight:0.2},
+    {id:'t6', name:'Casa Migos Blanco',    unit:'750ml', cost:38, par:2,  reorder:3,  onHand:0,    avgWeek:0.5, avgNight:0.1},
+    {id:'t7', name:'Teremana Blanco',      unit:'750ml', cost:22, par:2,  reorder:3,  onHand:4.25, avgWeek:0.3, avgNight:0.1},
+    {id:'t8', name:'Cazadores Reposado',   unit:'750ml', cost:22, par:2,  reorder:3,  onHand:0.5,  avgWeek:0.1, avgNight:0.0},
+    {id:'t9', name:'Luna Azul Blanco',     unit:'750ml', cost:18, par:2,  reorder:2,  onHand:0,    avgWeek:0.3, avgNight:0.1},
+    {id:'t10',name:'El Toro Silver',       unit:'750ml', cost:10, par:1,  reorder:2,  onHand:0,    avgWeek:0.1, avgNight:0.0},
+    {id:'t11',name:'El Toro Gold',         unit:'750ml', cost:10, par:1,  reorder:2,  onHand:0,    avgWeek:0.1, avgNight:0.0},
+  ],
+  whiskey: [
+    {id:'w1', name:'Jägermeister',         unit:'750ml', cost:20, par:3,  reorder:3,  onHand:0,    avgWeek:2.5, avgNight:0.5},
+    {id:'w2', name:'Hennessy VS',          unit:'750ml', cost:32, par:3,  reorder:4,  onHand:1,    avgWeek:1.0, avgNight:0.2},
+    {id:'w3', name:'Crown Royal',          unit:'750ml', cost:24, par:2,  reorder:3,  onHand:5.25, avgWeek:0.8, avgNight:0.2},
+    {id:'w4', name:"Jack Daniel's",        unit:'750ml', cost:20, par:2,  reorder:3,  onHand:0,    avgWeek:0.4, avgNight:0.1},
+    {id:'w5', name:'Crown Apple',          unit:'750ml', cost:24, par:2,  reorder:3,  onHand:3.75, avgWeek:0,   avgNight:0},
+    {id:'w6', name:"Jack Daniel's Honey",  unit:'750ml', cost:22, par:2,  reorder:3,  onHand:0.75, avgWeek:0.0, avgNight:0.0},
+    {id:'w7', name:'Woodford Reserve',     unit:'750ml', cost:30, par:2,  reorder:3,  onHand:0.5,  avgWeek:0,   avgNight:0},
+    {id:'w8', name:"Maker's Mark 101",     unit:'750ml', cost:30, par:2,  reorder:3,  onHand:0.25, avgWeek:0.0, avgNight:0.0},
+    {id:'w9', name:'Remy Martin 1738',     unit:'750ml', cost:45, par:2,  reorder:2,  onHand:0,    avgWeek:0.3, avgNight:0.1},
+    {id:'w10',name:'Jameson',              unit:'750ml', cost:22, par:1,  reorder:2,  onHand:0,    avgWeek:0.1, avgNight:0.0},
+  ],
+  vodka: [
+    {id:'v1', name:"Tito's Vodka",         unit:'750ml', cost:18, par:4,  reorder:4,  onHand:10,   avgWeek:2.2, avgNight:0.5},
+    {id:'v2', name:'Ketel One',            unit:'750ml', cost:22, par:2,  reorder:3,  onHand:1.25, avgWeek:0.4, avgNight:0.1},
+    {id:'v3', name:'Absolut Vodka',        unit:'750ml', cost:16, par:2,  reorder:3,  onHand:0.5,  avgWeek:0,   avgNight:0},
+    {id:'v4', name:'Bombay Sapphire Gin',  unit:'750ml', cost:22, par:2,  reorder:3,  onHand:1,    avgWeek:0,   avgNight:0},
+  ],
+  specialty: [
+    {id:'sp1', name:'Aperol Liqueur',         unit:'750ml', cost:22, par:2, reorder:2, onHand:1,    avgWeek:0, avgNight:0},
+    {id:'sp2', name:'Midori Melon Liqueur',   unit:'750ml', cost:18, par:2, reorder:2, onHand:1.75, avgWeek:0, avgNight:0},
+    {id:'sp3', name:'Watermelon Schnapps',    unit:'750ml', cost:14, par:2, reorder:2, onHand:1,    avgWeek:0, avgNight:0},
+    {id:'sp4', name:'Campari Bitters',        unit:'750ml', cost:22, par:2, reorder:2, onHand:0.25, avgWeek:0, avgNight:0},
+    {id:'sp5', name:'Kamora Coffee Liqueur',  unit:'750ml', cost:14, par:1, reorder:2, onHand:1,    avgWeek:0, avgNight:0},
+    {id:'sp6', name:'Del Santo Liqueur',      unit:'750ml', cost:14, par:1, reorder:2, onHand:0.75, avgWeek:0, avgNight:0},
+    {id:'sp7', name:'Bacardi Rum',            unit:'750ml', cost:14, par:1, reorder:2, onHand:0.25, avgWeek:0.1, avgNight:0.0},
+  ],
+  beer: [
+    {id:'br1', name:'Red Bull (Regular)',  unit:'Can',    cost:2.5,  par:30, reorder:24, onHand:0,   avgWeek:19.8, avgNight:4.0},
+    {id:'br2', name:'Corona Extra',        unit:'Bottle', cost:2.5,  par:18, reorder:12, onHand:1,   avgWeek:11.2, avgNight:2.2},
+    {id:'br3', name:'Red Bull Sugar Free', unit:'Can',    cost:2.5,  par:8,  reorder:8,  onHand:17,  avgWeek:4.2,  avgNight:0.8},
+    {id:'br4', name:'Sprite',              unit:'Can',    cost:1.0,  par:8,  reorder:8,  onHand:16,  avgWeek:4.0,  avgNight:0.8},
+    {id:'br5', name:'Mich Ultra',          unit:'Bottle', cost:2.0,  par:6,  reorder:6,  onHand:11,  avgWeek:3.0,  avgNight:0.6},
+    {id:'br6', name:'Bud Light',           unit:'Bottle', cost:2.0,  par:6,  reorder:6,  onHand:12,  avgWeek:1.5,  avgNight:0.3},
+    {id:'br7', name:'Heineken',            unit:'Bottle', cost:2.5,  par:6,  reorder:6,  onHand:9,   avgWeek:1.0,  avgNight:0.2},
+    {id:'br8', name:'Budweiser',           unit:'Bottle', cost:2.0,  par:6,  reorder:6,  onHand:4,   avgWeek:1.0,  avgNight:0.2},
+    {id:'br9', name:'Coke',                unit:'Can',    cost:1.0,  par:6,  reorder:8,  onHand:0,   avgWeek:1.5,  avgNight:0.3},
+    {id:'br10',name:'Ginger Ale',          unit:'Can',    cost:1.0,  par:6,  reorder:6,  onHand:0,   avgWeek:0.8,  avgNight:0.2},
+    {id:'br11',name:'Water (Bottled)',     unit:'Bottle', cost:1.0,  par:20, reorder:24, onHand:0,   avgWeek:25.2, avgNight:5.0},
+    {id:'br12',name:'Pineapple Juice',     unit:'Can',    cost:3.0,  par:4,  reorder:4,  onHand:0,   avgWeek:0.5,  avgNight:0.1},
+  ],
+  hookah: [
+    {id:'h1', name:'Shisha — Two Apples',       unit:'250g Tin',  cost:12, par:6, reorder:6, onHand:0},
+    {id:'h2', name:'Shisha — Watermelon Mint',  unit:'250g Tin',  cost:12, par:6, reorder:6, onHand:0},
+    {id:'h3', name:'Shisha — Blueberry Mint',   unit:'250g Tin',  cost:12, par:4, reorder:4, onHand:0},
+    {id:'h4', name:'Shisha — Peach',            unit:'250g Tin',  cost:12, par:4, reorder:4, onHand:0},
+    {id:'h5', name:'Shisha — Lemon Mint',       unit:'250g Tin',  cost:12, par:4, reorder:4, onHand:0},
+    {id:'h6', name:'Coconut Coals (Natural)',   unit:'Box 72pc',  cost:18, par:5, reorder:4, onHand:0},
+    {id:'h7', name:'Quick-Light Coals',         unit:'Box 100pc', cost:10, par:3, reorder:3, onHand:0},
+    {id:'h8', name:'Hookah Foil / Pre-cut',     unit:'100-pack',  cost:10, par:4, reorder:4, onHand:0},
+    {id:'h9', name:'Disposable Mouth Tips',     unit:'100-pack',  cost:8,  par:6, reorder:6, onHand:0},
+    {id:'h10',name:'Hookah Hoses',              unit:'Each',      cost:15, par:4, reorder:4, onHand:0},
+    {id:'h11',name:'Clay / Silicone Bowls',     unit:'Each',      cost:14, par:4, reorder:4, onHand:0},
+    {id:'h12',name:'Hookah Tongs',              unit:'Each',      cost:8,  par:3, reorder:3, onHand:0},
+  ],
+  supplies: [
+    {id:'s1', name:'Cocktail Napkins',    unit:'500-pack', cost:12, par:3, reorder:4, onHand:0},
+    {id:'s2', name:'Straws',              unit:'500-pack', cost:10, par:3, reorder:4, onHand:0},
+    {id:'s3', name:'Plastic Cups (16oz)', unit:'100-pack', cost:10, par:5, reorder:6, onHand:0},
+    {id:'s4', name:'Plastic Cups (12oz)', unit:'100-pack', cost:9,  par:3, reorder:4, onHand:0},
+    {id:'s5', name:'Speed Pourers',       unit:'12-pack',  cost:14, par:2, reorder:2, onHand:0},
+    {id:'s6', name:'Ice Scoop',           unit:'Each',     cost:8,  par:2, reorder:2, onHand:0},
+    {id:'s7', name:'Bar Mats',            unit:'Each',     cost:18, par:2, reorder:2, onHand:0},
+    {id:'s8', name:'Hand Sanitizer',      unit:'Gallon',   cost:15, par:2, reorder:3, onHand:0},
+    {id:'s9', name:'Paper Towels',        unit:'12-pack',  cost:18, par:2, reorder:3, onHand:0},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let inventory = JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
+let countLog = [];
+let currentAddCategory = null;
+let currentTab = 'dashboard';
+
+function getStatus(item) {
+  if (item.onHand <= 0)           return 'out';
+  if (item.onHand <= item.par)    return 'low';
+  if (item.onHand <= item.par*1.5)return 'warn';
+  return 'good';
+}
+
+function getStatusLabel(s) {
+  return {out:'🔴 OUT OF STOCK', low:'🟠 LOW — ORDER NOW', warn:'🟡 Getting Low', good:'🟢 Good'}[s];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD / SAVE (localStorage)
+// ═══════════════════════════════════════════════════════════════
+function loadData() {
+  try {
+    const saved = localStorage.getItem('sclt_inventory');
+    if (saved) inventory = JSON.parse(saved);
+    const savedLog = localStorage.getItem('sclt_log');
+    if (savedLog) countLog = JSON.parse(savedLog);
+    const savedDate = localStorage.getItem('sclt_lastUpdated');
+    if (savedDate) document.getElementById('lastUpdatedDisplay').textContent = savedDate;
+  } catch(e) {}
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem('sclt_inventory', JSON.stringify(inventory));
+    localStorage.setItem('sclt_log', JSON.stringify(countLog));
+    const now = new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    localStorage.setItem('sclt_lastUpdated', now);
+    document.getElementById('lastUpdatedDisplay').textContent = now;
+  } catch(e) {}
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'SAVED ✓'; btn.classList.add('saved');
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>{ btn.textContent='SAVE COUNT'; btn.classList.remove('saved'); t.classList.remove('show'); }, 2000);
+  renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderCategory(catKey) {
+  const items = inventory[catKey];
+  const cat   = CATEGORIES[catKey];
+  const container = document.getElementById(`tab-${catKey}`);
+  const hasAvg = items[0] && items[0].avgWeek !== undefined;
+
+  let html = `
+    <div class="section-header">
+      <div class="section-title">${cat.emoji} ${cat.label}</div>
+      <div class="section-count">${items.length} products</div>
+    </div>
+    <div class="item-list">`;
+
+  // Sort: out first, then low, then warn, then good
+  const order = {out:0,low:1,warn:2,good:3};
+  const sorted = [...items].sort((a,b)=> order[getStatus(a)] - order[getStatus(b)]);
+
+  sorted.forEach(item => {
+    const s = getStatus(item);
+    const needsOrder = item.onHand <= item.par;
+    html += `
+      <div class="item-card status-${s}" id="card-${item.id}">
+        <div class="item-left">
+          <div class="item-name">${item.name}</div>
+          <div class="item-meta">
+            <span class="item-meta-pill">${item.unit}</span>
+            <span class="item-meta-pill">Par <strong>${item.par}</strong></span>
+            <span class="item-meta-pill">Cost <strong>$${item.cost}</strong></span>
+            ${hasAvg && item.avgWeek ? `<span class="item-meta-pill">~<strong>${item.avgWeek}</strong>/wk</span>` : ''}
+          </div>
+          ${needsOrder ? `<div class="order-tag" style="margin-top:6px;display:inline-block;">Order ${item.reorder} units</div>` : ''}
+        </div>
+        <div class="item-right">
+          <span class="badge badge-${s}">${getStatusLabel(s).replace(/[🔴🟠🟡🟢]\s*/,'')}</span>
+          <div class="stepper">
+            <button class="stepper-btn" onclick="adjust('${catKey}','${item.id}',-0.25)">−</button>
+            <input class="stepper-input" type="number" value="${item.onHand}" min="0" step="0.25"
+              onchange="updateOnHand('${catKey}','${item.id}',this.value)"
+              oninput="updateOnHand('${catKey}','${item.id}',this.value)">
+            <button class="stepper-btn" onclick="adjust('${catKey}','${item.id}',0.25)">+</button>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  html += `</div>
+    <button class="add-item-btn" onclick="openAddModal('${catKey}')">+ Add Product</button>`;
+
+  container.innerHTML = html;
+}
+
+function renderDashboard() {
+  let out=0, low=0, good=0;
+  const criticals = [];
+
+  Object.keys(inventory).forEach(catKey => {
+    inventory[catKey].forEach(item => {
+      const s = getStatus(item);
+      if(s==='out') { out++; criticals.push({...item, cat:catKey}); }
+      else if(s==='low') { low++; criticals.push({...item, cat:catKey}); }
+      else good++;
+    });
+  });
+
+  document.getElementById('stat-out').textContent = out;
+  document.getElementById('stat-low').textContent = low;
+  document.getElementById('stat-good').textContent = good;
+
+  const ac = document.getElementById('alerts-container');
+  if(criticals.length === 0) {
+    ac.innerHTML = `<div style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;color:var(--green);font-weight:600;">✓ All items above par — you're good!</div>`;
+    return;
+  }
+
+  let alertHTML = `<div class="alerts-banner"><div class="alerts-title">🚨 Needs Attention (${criticals.length} items)</div>`;
+  criticals.slice(0,8).forEach(item => {
+    const s = getStatus(item);
+    alertHTML += `
+      <div class="alert-item">
+        <span class="alert-name">${item.name}</span>
+        <span class="alert-action">${s==='out'?'OUT — Order '+item.reorder:'Low — Order '+item.reorder}</span>
+      </div>`;
+  });
+  if(criticals.length > 8) alertHTML += `<div style="color:var(--muted);font-size:12px;margin-top:8px;text-align:center;">+${criticals.length-8} more — check category tabs</div>`;
+  alertHTML += `</div>`;
+  ac.innerHTML = alertHTML;
+}
+
+function renderOrderSheet() {
+  const list = document.getElementById('order-list');
+  const byCategory = {};
+
+  Object.keys(inventory).forEach(catKey => {
+    const needsOrder = inventory[catKey].filter(i => i.onHand <= i.par);
+    if(needsOrder.length > 0) byCategory[catKey] = needsOrder;
+  });
+
+  if(Object.keys(byCategory).length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>Nothing to order right now.<br>All items are above par.</p></div>`;
+    return;
+  }
+
+  let html = '';
+  Object.keys(byCategory).forEach(catKey => {
+    const cat = CATEGORIES[catKey];
+    html += `<div class="order-section"><div class="order-section-title">${cat.emoji} ${cat.label}</div>`;
+    byCategory[catKey].forEach(item => {
+      html += `
+        <div class="order-row" id="order-${item.id}">
+          <div>
+            <div class="order-row-name">${item.name}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">On Hand: ${item.onHand} · Par: ${item.par}</div>
+          </div>
+          <div class="order-check">
+            <span class="order-row-qty">Order ${item.reorder}</span>
+            <input type="checkbox" onchange="markOrdered('${item.id}',this.checked)">
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  list.innerHTML = html;
+}
+
+function renderLog() {
+  const list = document.getElementById('log-list');
+  if(countLog.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No counts logged yet.<br>Complete your first count and log it here.</p></div>`;
+    return;
+  }
+  let html = '';
+  [...countLog].reverse().forEach(entry => {
+    html += `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--neon)">${entry.date}</span>
+          <span style="font-size:12px;color:var(--lavender);font-weight:600;">${entry.name}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Categories: <span style="color:var(--off-white)">${entry.cats}</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Orders Placed: <span style="color:var(--off-white)">${entry.orders}</span></div>
+        ${entry.notes ? `<div style="font-size:12px;color:var(--muted);">Notes: <span style="color:var(--off-white)">${entry.notes}</span></div>` : ''}
+      </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════════════════════════
+function adjust(catKey, id, delta) {
+  const item = inventory[catKey].find(i=>i.id===id);
+  if(!item) return;
+  item.onHand = Math.max(0, Math.round((item.onHand + delta)*100)/100);
+  const input = document.querySelector(`#card-${id} .stepper-input`);
+  if(input) input.value = item.onHand;
+  refreshCard(catKey, id);
+}
+
+function updateOnHand(catKey, id, val) {
+  const item = inventory[catKey].find(i=>i.id===id);
+  if(!item) return;
+  const n = parseFloat(val);
+  if(!isNaN(n) && n >= 0) { item.onHand = n; refreshCard(catKey, id); }
+}
+
+function refreshCard(catKey, id) {
+  const item = inventory[catKey].find(i=>i.id===id);
+  if(!item) return;
+  const s = getStatus(item);
+  const card = document.getElementById(`card-${item.id}`);
+  if(!card) return;
+  card.className = `item-card status-${s}`;
+  const badge = card.querySelector('.badge');
+  badge.className = `badge badge-${s}`;
+  badge.textContent = getStatusLabel(s).replace(/[🔴🟠🟡🟢]\s*/,'');
+  const orderTag = card.querySelector('.order-tag');
+  if(item.onHand <= item.par) {
+    if(!orderTag) {
+      const meta = card.querySelector('.item-meta');
+      const tag = document.createElement('div');
+      tag.className='order-tag'; tag.style.marginTop='6px'; tag.style.display='inline-block';
+      tag.textContent=`Order ${item.reorder} units`;
+      meta.after(tag);
+    }
+  } else { if(orderTag) orderTag.remove(); }
+}
+
+function markOrdered(id, checked) {
+  const row = document.getElementById(`order-${id}`);
+  if(row) row.style.opacity = checked ? '0.4' : '1';
+}
+
+function clearOrders() {
+  document.querySelectorAll('.order-row input[type=checkbox]:checked').forEach(cb => {
+    const row = cb.closest('.order-row');
+    if(row) row.remove();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADD ITEM MODAL
+// ═══════════════════════════════════════════════════════════════
+function openAddModal(catKey) {
+  currentAddCategory = catKey;
+  document.getElementById('newName').value='';
+  document.getElementById('newUnit').value='';
+  document.getElementById('newCost').value='';
+  document.getElementById('newPar').value='';
+  document.getElementById('newReorder').value='';
+  document.getElementById('addModal').classList.add('open');
+}
+function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
+function confirmAdd() {
+  const name    = document.getElementById('newName').value.trim();
+  const unit    = document.getElementById('newUnit').value.trim() || '750ml';
+  const cost    = parseFloat(document.getElementById('newCost').value) || 0;
+  const par     = parseInt(document.getElementById('newPar').value) || 1;
+  const reorder = parseInt(document.getElementById('newReorder').value) || par;
+  if(!name) return;
+  const id = 'custom_' + Date.now();
+  inventory[currentAddCategory].push({id, name, unit, cost, par, reorder, onHand:0});
+  closeAddModal();
+  renderCategory(currentAddCategory);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOG MODAL
+// ═══════════════════════════════════════════════════════════════
+function openLogModal() {
+  document.getElementById('logName').value='';
+  document.getElementById('logCats').value='';
+  document.getElementById('logNotes').value='';
+  document.getElementById('logModal').classList.add('open');
+}
+function closeLogModal() { document.getElementById('logModal').classList.remove('open'); }
+function confirmLog() {
+  const name   = document.getElementById('logName').value.trim() || 'Unknown';
+  const cats   = document.getElementById('logCats').value.trim() || 'All';
+  const orders = document.getElementById('logOrders').value;
+  const notes  = document.getElementById('logNotes').value.trim();
+  const now    = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  countLog.push({date:now, name, cats, orders, notes});
+  localStorage.setItem('sclt_log', JSON.stringify(countLog));
+  closeLogModal();
+  renderLog();
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function showTab(tab) {
+  document.querySelectorAll('[id^=tab-]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.remove('hidden');
+  const tabs = document.querySelectorAll('.tab');
+  const tabNames = ['dashboard','bottles','tequila','whiskey','vodka','specialty','beer','hookah','supplies','orders','log'];
+  const idx = tabNames.indexOf(tab);
+  if(tabs[idx]) tabs[idx].classList.add('active');
+  currentTab = tab;
+
+  if(CATEGORIES[tab]) renderCategory(tab);
+  if(tab==='dashboard') renderDashboard();
+  if(tab==='orders') renderOrderSheet();
+  if(tab==='log') renderLog();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+loadData();
+renderDashboard();
+</script>
+</body>
+</html>
