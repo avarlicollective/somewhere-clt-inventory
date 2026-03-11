@@ -247,6 +247,43 @@
 
   
 </style>
+<script>
+// PIN in <head> so it's defined before any onclick can fire
+var _pinBuffer='', _sessionUnlocked=false;
+function _getPin(){ return localStorage.getItem('sclt_pin')||'1234'; }
+function _updateDots(state){
+  for(var i=0;i<4;i++){
+    var el=document.getElementById('pd'+i); if(!el) return;
+    el.className='pin-dot';
+    if(i<_pinBuffer.length) el.classList.add(state||'filled');
+  }
+}
+function _checkPin(){
+  if(_pinBuffer===_getPin()){
+    document.getElementById('pin-screen').classList.add('hidden');
+    document.getElementById('app').style.display='block';
+    _sessionUnlocked=true; _pinBuffer=''; _updateDots();
+    if(typeof window._initApp==='function') window._initApp();
+  } else {
+    _updateDots('error');
+    document.getElementById('pin-err').textContent='Incorrect PIN — try again';
+    setTimeout(function(){ _pinBuffer=''; _updateDots(); document.getElementById('pin-err').textContent=''; }, 900);
+  }
+}
+function pinPress(d){ if(_pinBuffer.length>=4)return; _pinBuffer+=d; _updateDots(); if(_pinBuffer.length===4) setTimeout(_checkPin,120); }
+function pinDel(){ _pinBuffer=_pinBuffer.slice(0,-1); _updateDots(); }
+function lockApp(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('pin-screen').classList.remove('hidden');
+  _sessionUnlocked=false; _pinBuffer=''; _updateDots();
+}
+document.addEventListener('keydown', function(e){
+  if(!_sessionUnlocked){
+    if(e.key>='0'&&e.key<='9') pinPress(e.key);
+    if(e.key==='Backspace') pinDel();
+  }
+});
+</script>
 </head>
 <body>
 
@@ -482,6 +519,7 @@
 </div>
 
 
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
@@ -495,32 +533,6 @@ const firebaseConfig = {
 };
 const fbApp = initializeApp(firebaseConfig);
 const db    = getFirestore(fbApp);
-
-// ── PIN ──────────────────────────────────────────────────────
-let pinBuffer = '', sessionUnlocked = false;
-function getPin(){ return localStorage.getItem('sclt_pin')||'1234'; }
-window.pinPress = function(d){ if(pinBuffer.length>=4)return; pinBuffer+=d; updateDots(); if(pinBuffer.length===4)setTimeout(checkPin,120); };
-window.pinDel   = function(){ pinBuffer=pinBuffer.slice(0,-1); updateDots(); };
-function updateDots(state=''){
-  for(let i=0;i<4;i++){const el=document.getElementById('pd'+i);el.className='pin-dot';if(i<pinBuffer.length)el.classList.add(state||'filled');}
-}
-function checkPin(){
-  if(pinBuffer===getPin()){
-    document.getElementById('pin-screen').classList.add('hidden');
-    document.getElementById('app').style.display='block';
-    sessionUnlocked=true; pinBuffer=''; updateDots(); initApp();
-  } else {
-    updateDots('error');
-    document.getElementById('pin-err').textContent='Incorrect PIN — try again';
-    setTimeout(()=>{ pinBuffer=''; updateDots(); document.getElementById('pin-err').textContent=''; },900);
-  }
-}
-window.lockApp = function(){
-  document.getElementById('app').style.display='none';
-  document.getElementById('pin-screen').classList.remove('hidden');
-  sessionUnlocked=false; pinBuffer=''; updateDots();
-};
-document.addEventListener('keydown',e=>{ if(!sessionUnlocked){ if(e.key>='0'&&e.key<='9')window.pinPress(e.key); if(e.key==='Backspace')window.pinDel(); }});
 
 // ── DATA ─────────────────────────────────────────────────────
 // bs:true = also offered as bottle service
@@ -645,6 +657,8 @@ async function initApp(){
     if(active){const m=active.getAttribute('onclick').match(/'(\w+)'/);if(m&&CAT_LABELS[m[1]])renderCategory(m[1]);}
   },()=>setSync('offline'));
 }
+// Expose so the plain-script PIN block can call it after successful PIN entry
+window._initApp = initApp;
 
 window.saveToFirebase = async function(){
   setSync('syncing');
