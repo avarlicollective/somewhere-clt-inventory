@@ -421,8 +421,9 @@ document.addEventListener('keydown', function(e){
       <!-- UPLOAD ZONE -->
       <div id="upload-zone" style="border:2px dashed var(--border-lit);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:20px;" onclick="document.getElementById('csv-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--neon)'" ondragleave="this.style.borderColor='var(--border-lit)'" ondrop="handleDrop(event)">
         <div style="font-size:32px;margin-bottom:10px;">📂</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--lavender);margin-bottom:6px;">Drop Toast CSV Here</div>
-        <div style="font-size:12px;color:var(--muted);">or tap to browse · ProductMix export from Toast</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--lavender);margin-bottom:6px;">Drop Items.csv Here</div>
+        <div style="font-size:12px;color:var(--muted);">From your Toast export folder · tap to browse</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Toast export → open the zip → upload <strong style="color:var(--lavender)">Items.csv</strong></div>
         <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSVUpload(this.files[0])">
       </div>
 
@@ -921,84 +922,99 @@ window.handleDrop = function(e){
 window.handleCSVUpload = function(file){
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = function(e){
-    const text = e.target.result;
-    parseToastCSV(text, file.name);
-  };
+  reader.onload = function(e){ parseToastCSV(e.target.result, file.name); };
   reader.readAsText(file);
 };
 
 function parseToastCSV(text, filename){
-  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-  if(!lines.length){ showToast('Empty file — check export'); return; }
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){ showToast('Empty file'); return; }
 
-  // Find header row
-  let headerIdx = -1;
-  for(let i=0;i<Math.min(10,lines.length);i++){
-    if(lines[i].toLowerCase().includes('menu item') || lines[i].toLowerCase().includes('item name')){
-      headerIdx = i; break;
-    }
+  // Parse header row
+  const headers = parseCSVLine(lines[0]).map(h=>h.toLowerCase().trim());
+
+  // Toast Items.csv exact column mapping
+  const col = {
+    name:     headers.findIndex(h=>h==='item'),
+    qty:      headers.findIndex(h=>h==='qty sold'),
+    gross:    headers.findIndex(h=>h==='gross sales'),
+    discount: headers.findIndex(h=>h==='discount amount'),
+    refund:   headers.findIndex(h=>h==='refund amount'),
+    void:     headers.findIndex(h=>h==='void amount'),
+    net:      headers.findIndex(h=>h==='net sales'),
+  };
+
+  if(col.name===-1 || col.qty===-1){
+    showToast('Upload Items.csv from your Toast export folder');
+    return;
   }
-  if(headerIdx === -1){ showToast('Could not read CSV — check Toast export format'); return; }
-
-  const headers = parseCSVLine(lines[headerIdx]).map(h=>h.toLowerCase().trim());
-  const nameIdx  = headers.findIndex(h=>h.includes('menu item')||h.includes('item name')||h.includes('name'));
-  const qtyIdx   = headers.findIndex(h=>h.includes('qty')||h.includes('quantity'));
-  const grossIdx = headers.findIndex(h=>h.includes('gross')||h.includes('sales'));
-  const netIdx   = headers.findIndex(h=>h.includes('net'));
-
-  if(nameIdx===-1||qtyIdx===-1){ showToast('Missing columns — need Item Name and Qty in CSV'); return; }
 
   const parsed = [];
-  for(let i=headerIdx+1;i<lines.length;i++){
+  for(let i=1; i<lines.length; i++){
     const cols = parseCSVLine(lines[i]);
-    if(!cols[nameIdx]) continue;
-    const name  = cols[nameIdx].trim();
-    const qty   = parseFloat((cols[qtyIdx]||'0').replace(/[^0-9.\-]/g,''))||0;
-    const gross = grossIdx>=0 ? parseFloat((cols[grossIdx]||'0').replace(/[^0-9.\-]/g,''))||0 : 0;
-    const net   = netIdx>=0  ? parseFloat((cols[netIdx]||'0').replace(/[^0-9.\-]/g,''))||0  : gross;
-    if(qty>0 || gross>0) parsed.push({name,qty,gross,net});
+    const name = (cols[col.name]||'').trim();
+    if(!name || name==='' || name==='""') continue;
+    const qty      = parseNum(cols[col.qty]);
+    const gross    = parseNum(cols[col.gross]);
+    const discount = parseNum(cols[col.discount]);
+    const refund   = parseNum(cols[col.refund]);
+    const voidAmt  = parseNum(cols[col.void]);
+    const net      = parseNum(cols[col.net]);
+    if(qty===0 && gross===0) continue;
+    parsed.push({ name, qty, gross, discount, refund, voidAmt, net,
+      discountPct: gross>0 ? Math.round((discount/gross)*100) : 0 });
   }
 
-  if(!parsed.length){ showToast('No sales rows found in CSV'); return; }
+  if(!parsed.length){ showToast('No data rows found in file'); return; }
 
-  // Calculate days in period from filename or default 28
-  const days = 28;
-  const weeks = days / 7;
+  // Estimate period — store upload date, user can label it
+  const uploadDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
 
-  // Update salesData store
+  // For avg calculations we need days — default 7, user can adjust later
+  const DAYS  = 7;
+  const WEEKS = DAYS / 7;
+
   salesData = parsed.map(row=>({
     ...row,
-    avgWeek: Math.round((row.qty/weeks)*10)/10,
-    avgNight: Math.round((row.qty/days)*10)/10,
+    avgWeek:  Math.round((row.qty / WEEKS) * 10) / 10,
+    avgNight: Math.round((row.qty / DAYS)  * 10) / 10,
+    uploadDate,
+    filename,
   }));
 
-  // Try to auto-match and update avg/week in inventory
-  updateInventoryAvgs(salesData, weeks);
+  // Auto-update avgWeek/avgNight in inventory from matched items
+  updateInventoryAvgs(salesData, WEEKS);
 
   // Update revenue breakdown on dashboard
   updateRevenueFromSales(salesData);
 
   // Show upload status
-  const uploadDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+  const flagged = salesData.filter(r=>r.discountPct>=20).length;
   document.getElementById('upload-status').style.display='block';
   document.getElementById('upload-info').innerHTML=
-    `File: <strong style="color:var(--white)">${filename}</strong><br>
-     Rows parsed: <strong style="color:var(--neon)">${parsed.length} items</strong><br>
-     Uploaded: ${uploadDate}`;
+    `File: <strong style="color:var(--white)">${filename}</strong> &nbsp;·&nbsp;
+     <strong style="color:var(--neon)">${parsed.length} items</strong> &nbsp;·&nbsp;
+     Uploaded: ${uploadDate}
+     ${flagged ? `<br><span style="color:var(--orange)">⚠️ ${flagged} items with 20%+ discount rate — check Sales tab</span>` : ''}`;
 
   renderSalesTable();
   saveToFirebase();
-  showToast(`✓ ${parsed.length} items imported from CSV`);
+  showToast(`✓ ${parsed.length} items loaded from ${filename}`);
+}
+
+function parseNum(val){
+  if(!val) return 0;
+  const n = parseFloat(String(val).replace(/[^0-9.\-]/g,''));
+  return isNaN(n) ? 0 : n;
 }
 
 function parseCSVLine(line){
-  const result=[]; let cur='',inQ=false;
+  const result=[]; let cur='', inQ=false;
   for(let i=0;i<line.length;i++){
     const c=line[i];
-    if(c==='"'){inQ=!inQ;}
-    else if(c===','&&!inQ){result.push(cur.trim());cur='';}
-    else{cur+=c;}
+    if(c==='"'){ inQ=!inQ; }
+    else if(c===','&&!inQ){ result.push(cur.trim()); cur=''; }
+    else { cur+=c; }
   }
   result.push(cur.trim());
   return result;
@@ -1099,19 +1115,40 @@ function renderRevenueBreakdown(){
 function renderSalesTable(){
   const container = document.getElementById('sales-table');
   if(!container) return;
-  if(!salesData.length){
-    container.innerHTML='';
-    return;
-  }
+  if(!salesData.length){ container.innerHTML=''; return; }
+
   const sorted = [...salesData].sort((a,b)=>b.gross-a.gross);
-  let h=`<div class="sec-hdr"><div class="sec-title">All Items — by Revenue</div><div class="sec-count">${sorted.length} items</div></div>`;
+  let h=`<div class="sec-hdr" style="margin-bottom:12px;">
+    <div class="sec-title">All Items — by Revenue</div>
+    <div class="sec-count">${sorted.length} items</div>
+  </div>`;
+
+  // Flags summary
+  const highDisc  = sorted.filter(r=>r.discountPct>=20);
+  const hasVoids  = sorted.filter(r=>r.voidAmt>0);
+  const hasRefund = sorted.filter(r=>r.refund>0);
+  if(highDisc.length||hasVoids.length||hasRefund.length){
+    h+=`<div style="background:linear-gradient(135deg,rgba(255,51,85,0.07),rgba(255,136,0,0.04));border:1px solid rgba(255,51,85,0.22);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--red);margin-bottom:8px;">🚨 Flags This Period</div>
+      ${highDisc.length?`<div style="font-size:12px;color:var(--orange);margin-bottom:4px;">⚠️ <strong>${highDisc.length} items</strong> with 20%+ discount rate: ${highDisc.map(r=>r.name).join(', ')}</div>`:''}
+      ${hasVoids.length?`<div style="font-size:12px;color:var(--red);margin-bottom:4px;">🗑️ <strong>${hasVoids.length} items</strong> with voids: ${hasVoids.map(r=>`${r.name} ($${r.voidAmt})`).join(', ')}</div>`:''}
+      ${hasRefund.length?`<div style="font-size:12px;color:var(--yellow);">↩️ <strong>${hasRefund.length} items</strong> with refunds: ${hasRefund.map(r=>`${r.name} ($${r.refund})`).join(', ')}</div>`:''}
+    </div>`;
+  }
+
   sorted.forEach(row=>{
-    const netFmt  = row.net>=0?`$${row.net.toFixed(2)}`:`-$${Math.abs(row.net).toFixed(2)}`;
-    const discPct = row.gross>0?Math.round(((row.gross-row.net)/row.gross)*100):0;
-    h+=`<div class="sales-row">
+    const netFmt   = `$${row.net.toFixed(2)}`;
+    const grossFmt = `$${row.gross.toFixed(2)}`;
+    const flags = [];
+    if(row.discountPct>=20) flags.push(`<span style="color:var(--orange)">⚠️ ${row.discountPct}% disc</span>`);
+    if(row.voidAmt>0)       flags.push(`<span style="color:var(--red)">🗑️ $${row.voidAmt} void</span>`);
+    if(row.refund>0)        flags.push(`<span style="color:var(--yellow)">↩️ $${row.refund} refund</span>`);
+
+    h+=`<div class="sales-row${row.discountPct>=20||row.voidAmt>0?' ':''}" style="${row.discountPct>=50?'border-color:rgba(255,51,85,0.35);':''}">
       <div>
         <div class="sales-name">${row.name}</div>
-        <div class="sales-meta">Qty: ${row.qty} · Gross: $${row.gross.toFixed(2)} · Avg/wk: ${row.avgWeek}${discPct>5?` · <span style="color:var(--orange)">⚠️ ${discPct}% discounted</span>`:''}</div>
+        <div class="sales-meta">Qty: ${row.qty} &nbsp;·&nbsp; Gross: ${grossFmt} &nbsp;·&nbsp; Avg/wk: ${row.avgWeek}
+        ${flags.length ? ' &nbsp;·&nbsp; '+flags.join(' &nbsp;·&nbsp; ') : ''}</div>
       </div>
       <div class="sales-rev">${netFmt}</div>
     </div>`;
