@@ -206,9 +206,46 @@
   .btn-s{flex:1;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;padding:11px;transition:all 0.18s;}
   .btn-s:hover{border-color:var(--purple-mid);color:var(--lavender);}
 
-  .empty{text-align:center;padding:44px 20px;color:var(--muted);}
-  .empty .ico{font-size:36px;margin-bottom:10px;}
-  .hidden{display:none !important;}
+  /* VARIANCE */
+  .var-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+  @media(max-width:480px){.var-summary{grid-template-columns:repeat(2,1fr);}}
+  .var-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;}
+  .var-card.flag{border-color:rgba(255,51,85,0.4);background:rgba(255,51,85,0.04);}
+  .var-card.ok{border-color:rgba(0,230,118,0.25);}
+  .var-num{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;}
+  .var-card.flag .var-num{color:var(--red);}
+  .var-card.ok .var-num{color:var(--green);}
+  .var-card .var-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:4px;}
+
+  .var-row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;position:relative;overflow:hidden;}
+  .var-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;}
+  .var-row.flag-high::before{background:var(--red);box-shadow:0 0 8px rgba(255,51,85,0.5);}
+  .var-row.flag-med::before{background:var(--orange);}
+  .var-row.flag-ok::before{background:var(--green-d);}
+  .var-row.flag-high{border-color:rgba(255,51,85,0.3);}
+  .var-row.flag-med{border-color:rgba(255,136,0,0.3);}
+  .var-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .var-name{font-weight:600;color:var(--white);font-size:14px;}
+  .var-badge{font-size:9px;font-weight:700;letter-spacing:0.8px;padding:3px 8px;border-radius:20px;text-transform:uppercase;}
+  .var-badge.high{background:rgba(255,51,85,0.12);color:var(--red);border:1px solid rgba(255,51,85,0.25);}
+  .var-badge.med{background:rgba(255,136,0,0.12);color:var(--orange);border:1px solid rgba(255,136,0,0.25);}
+  .var-badge.ok{background:rgba(0,230,118,0.08);color:var(--green);border:1px solid rgba(0,230,118,0.18);}
+  .var-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;}
+  .var-cell{background:var(--dark);border-radius:6px;padding:6px 8px;}
+  .var-cell-lbl{color:var(--muted);margin-bottom:2px;font-size:10px;}
+  .var-cell-val{color:var(--white);font-family:'DM Mono',monospace;font-weight:500;}
+  .var-cell-val.negative{color:var(--red);}
+  .var-meta{font-size:11px;color:var(--muted);margin-top:8px;}
+
+  /* SALES TABLE */
+  .sales-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;}
+  .sales-name{font-weight:500;color:var(--white);font-size:13px;}
+  .sales-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .sales-rev{font-family:'DM Mono',monospace;font-size:13px;color:var(--neon);font-weight:600;}
+
+  .upload-zone-active{border-color:var(--neon)!important;background:rgba(255,46,238,0.04);}
+
+  
 </style>
 </head>
 <body>
@@ -268,6 +305,8 @@
       <div class="tab" onclick="showTab('hookah')">💨 Hookah</div>
       <div class="tab" onclick="showTab('supplies')">🧴 Supplies</div>
       <div class="tab" onclick="showTab('orders')">🛒 Orders</div>
+      <div class="tab" onclick="showTab('variance')">📉 Variance</div>
+      <div class="tab" onclick="showTab('sales')">📈 Sales</div>
       <div class="tab" onclick="showTab('log')">📋 Log</div>
     </div>
 
@@ -322,6 +361,42 @@
       </div>
       <p style="color:var(--muted);font-size:12px;margin-bottom:16px;">All items at or below par. Check off as you place each order.</p>
       <div id="order-list"></div>
+    </div>
+
+    <!-- VARIANCE -->
+    <div id="tab-variance" class="hidden">
+      <div class="sec-hdr">
+        <div class="sec-title">📉 Variance Tracker</div>
+        <button class="btn-p" style="padding:7px 14px;font-size:13px;letter-spacing:1px;" onclick="openVarianceModal()">+ Log Variance</button>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px;">Compare what your sales say was used vs. what inventory actually shows. Flags suspicious gaps.</p>
+      <div id="variance-summary"></div>
+      <div id="variance-list"><div class="empty"><div class="ico">📉</div><p>No variance records yet.<br>Upload sales data and run counts to start tracking.</p></div></div>
+    </div>
+
+    <!-- SALES UPLOAD -->
+    <div id="tab-sales" class="hidden">
+      <div class="sec-hdr">
+        <div class="sec-title">📈 Sales Data</div>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:20px;">Upload your Toast ProductMix CSV export to update revenue breakdown, avg/week figures, and enable variance tracking.</p>
+
+      <!-- UPLOAD ZONE -->
+      <div id="upload-zone" style="border:2px dashed var(--border-lit);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:20px;" onclick="document.getElementById('csv-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--neon)'" ondragleave="this.style.borderColor='var(--border-lit)'" ondrop="handleDrop(event)">
+        <div style="font-size:32px;margin-bottom:10px;">📂</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--lavender);margin-bottom:6px;">Drop Toast CSV Here</div>
+        <div style="font-size:12px;color:var(--muted);">or tap to browse · ProductMix export from Toast</div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSVUpload(this.files[0])">
+      </div>
+
+      <!-- UPLOAD STATUS -->
+      <div id="upload-status" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--green);margin-bottom:8px;">✓ Last Upload</div>
+        <div id="upload-info" style="font-size:12px;color:var(--muted);"></div>
+      </div>
+
+      <!-- PARSED SALES TABLE -->
+      <div id="sales-table"></div>
     </div>
 
     <!-- LOG -->
@@ -390,7 +465,23 @@
   </div>
 </div>
 
-<script type="module">
+<!-- VARIANCE MODAL -->
+<div class="overlay" id="varianceModal">
+  <div class="modal">
+    <div class="modal-title">Log Variance Check</div>
+    <div class="field"><label>Period (e.g. Mar 10–17)</label><input id="vPeriod" placeholder="Mar 10–17"></div>
+    <div class="field"><label>Checked By</label><input id="vAuthor" placeholder="Your name"></div>
+    <div style="background:var(--dark);border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.6;">
+      ℹ️ After logging, go to each category tab and enter your current on-hand counts. The app will compare those counts against expected usage from your uploaded sales data.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-s" onclick="closeModal('varianceModal')">Cancel</button>
+      <button class="btn-p" onclick="confirmVariance()">Start Check</button>
+    </div>
+  </div>
+</div>
+
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
@@ -520,11 +611,13 @@ const DEFAULT_INVENTORY = {
 
 const CAT_LABELS={tequila:'Tequila',whiskey:'Whiskey & Bourbon',vodka:'Vodka & Gin',specialty:'Specialty & Liqueurs',beer:'Beer & Mixers',hookah:'Hookah Supplies',supplies:'Bar Supplies'};
 const CAT_EMOJI ={tequila:'🥃',whiskey:'🥃',vodka:'🍸',specialty:'🍹',beer:'🍺',hookah:'💨',supplies:'🧴'};
-const TAB_NAMES =['dashboard','tequila','whiskey','vodka','specialty','beer','hookah','supplies','orders','log'];
+const TAB_NAMES =['dashboard','tequila','whiskey','vodka','specialty','beer','hookah','supplies','orders','variance','sales','log'];
 
 let inventory = JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
 let countLog  = [];
 let teamNotes = [];
+let salesData = [];       // parsed from Toast CSV uploads
+let varianceRecords = []; // historical variance checks
 let addCat    = null;
 let editNoteId = null;
 
@@ -540,9 +633,11 @@ async function initApp(){
   onSnapshot(doc(db,'somewhere-clt','inventory'),snap=>{
     if(snap.exists()){
       const d=snap.data();
-      if(d.inventory)  inventory  = d.inventory;
-      if(d.countLog)   countLog   = d.countLog;
-      if(d.teamNotes)  teamNotes  = d.teamNotes;
+      if(d.inventory)        inventory        = d.inventory;
+      if(d.countLog)         countLog         = d.countLog;
+      if(d.teamNotes)        teamNotes        = d.teamNotes;
+      if(d.salesData)        salesData        = d.salesData;
+      if(d.varianceRecords)  varianceRecords  = d.varianceRecords;
     }
     setSync('live');
     renderDashboard();
@@ -554,7 +649,10 @@ async function initApp(){
 window.saveToFirebase = async function(){
   setSync('syncing');
   try{
-    await setDoc(doc(db,'somewhere-clt','inventory'),{inventory,countLog,teamNotes,lastUpdated:new Date().toISOString()});
+    await setDoc(doc(db,'somewhere-clt','inventory'),{
+      inventory, countLog, teamNotes, salesData, varianceRecords,
+      lastUpdated:new Date().toISOString()
+    });
     setSync('live');
     const btn=document.getElementById('saveBtn');
     btn.textContent='SAVED ✓'; btn.classList.add('saved');
@@ -797,15 +895,361 @@ window.closeModal=id=>document.getElementById(id).classList.remove('open');
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
 // ── TABS ─────────────────────────────────────────────────────
+// ── CSV UPLOAD ────────────────────────────────────────────────
+window.handleDrop = function(e){
+  e.preventDefault();
+  document.getElementById('upload-zone').style.borderColor='var(--border-lit)';
+  const file = e.dataTransfer.files[0];
+  if(file && file.name.endsWith('.csv')) handleCSVUpload(file);
+  else showToast('Please drop a .csv file');
+};
+
+window.handleCSVUpload = function(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const text = e.target.result;
+    parseToastCSV(text, file.name);
+  };
+  reader.readAsText(file);
+};
+
+function parseToastCSV(text, filename){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){ showToast('Empty file — check export'); return; }
+
+  // Find header row
+  let headerIdx = -1;
+  for(let i=0;i<Math.min(10,lines.length);i++){
+    if(lines[i].toLowerCase().includes('menu item') || lines[i].toLowerCase().includes('item name')){
+      headerIdx = i; break;
+    }
+  }
+  if(headerIdx === -1){ showToast('Could not read CSV — check Toast export format'); return; }
+
+  const headers = parseCSVLine(lines[headerIdx]).map(h=>h.toLowerCase().trim());
+  const nameIdx  = headers.findIndex(h=>h.includes('menu item')||h.includes('item name')||h.includes('name'));
+  const qtyIdx   = headers.findIndex(h=>h.includes('qty')||h.includes('quantity'));
+  const grossIdx = headers.findIndex(h=>h.includes('gross')||h.includes('sales'));
+  const netIdx   = headers.findIndex(h=>h.includes('net'));
+
+  if(nameIdx===-1||qtyIdx===-1){ showToast('Missing columns — need Item Name and Qty in CSV'); return; }
+
+  const parsed = [];
+  for(let i=headerIdx+1;i<lines.length;i++){
+    const cols = parseCSVLine(lines[i]);
+    if(!cols[nameIdx]) continue;
+    const name  = cols[nameIdx].trim();
+    const qty   = parseFloat((cols[qtyIdx]||'0').replace(/[^0-9.\-]/g,''))||0;
+    const gross = grossIdx>=0 ? parseFloat((cols[grossIdx]||'0').replace(/[^0-9.\-]/g,''))||0 : 0;
+    const net   = netIdx>=0  ? parseFloat((cols[netIdx]||'0').replace(/[^0-9.\-]/g,''))||0  : gross;
+    if(qty>0 || gross>0) parsed.push({name,qty,gross,net});
+  }
+
+  if(!parsed.length){ showToast('No sales rows found in CSV'); return; }
+
+  // Calculate days in period from filename or default 28
+  const days = 28;
+  const weeks = days / 7;
+
+  // Update salesData store
+  salesData = parsed.map(row=>({
+    ...row,
+    avgWeek: Math.round((row.qty/weeks)*10)/10,
+    avgNight: Math.round((row.qty/days)*10)/10,
+  }));
+
+  // Try to auto-match and update avg/week in inventory
+  updateInventoryAvgs(salesData, weeks);
+
+  // Update revenue breakdown on dashboard
+  updateRevenueFromSales(salesData);
+
+  // Show upload status
+  const uploadDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+  document.getElementById('upload-status').style.display='block';
+  document.getElementById('upload-info').innerHTML=
+    `File: <strong style="color:var(--white)">${filename}</strong><br>
+     Rows parsed: <strong style="color:var(--neon)">${parsed.length} items</strong><br>
+     Uploaded: ${uploadDate}`;
+
+  renderSalesTable();
+  saveToFirebase();
+  showToast(`✓ ${parsed.length} items imported from CSV`);
+}
+
+function parseCSVLine(line){
+  const result=[]; let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){result.push(cur.trim());cur='';}
+    else{cur+=c;}
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function updateInventoryAvgs(sales, weeks){
+  // Fuzzy match product names from CSV to inventory items
+  Object.keys(inventory).forEach(catKey=>{
+    (inventory[catKey]||[]).forEach(item=>{
+      const itemNameLower = item.name.toLowerCase().replace(/[^a-z0-9]/g,' ').trim();
+      let bestMatch = null, bestScore = 0;
+      sales.forEach(row=>{
+        const rowNameLower = row.name.toLowerCase().replace(/[^a-z0-9]/g,' ').trim();
+        const score = fuzzyScore(itemNameLower, rowNameLower);
+        if(score > bestScore && score > 0.45){ bestScore=score; bestMatch=row; }
+      });
+      if(bestMatch){
+        // shots: 1 bottle = ~17 shots (1.5oz pours from 750ml)
+        const SHOTS_PER_BTL = 17;
+        let bottlesPerWeek = bestMatch.avgWeek;
+        // If qty looks like shots (high number), convert
+        if(bestMatch.qty > item.par * 20) bottlesPerWeek = Math.round((bestMatch.avgWeek/SHOTS_PER_BTL)*10)/10;
+        item.avgWeek  = bottlesPerWeek;
+        item.avgNight = Math.round((bottlesPerWeek/5)*10)/10;
+      }
+    });
+  });
+}
+
+function fuzzyScore(a, b){
+  const wordsA = a.split(' ').filter(Boolean);
+  const wordsB = b.split(' ').filter(Boolean);
+  let matches = 0;
+  wordsA.forEach(w=>{ if(w.length>2 && wordsB.some(wb=>wb.includes(w)||w.includes(wb))) matches++; });
+  return wordsA.length ? matches/wordsA.length : 0;
+}
+
+function updateRevenueFromSales(sales){
+  // Group into categories by keyword matching
+  const categories = {
+    'Full Bottle Service': ['full bottle','bottle service','btl'],
+    'Tequila':             ['tequila','repo','blanco','julio','gritona','migos','teremana','cazadores','luna'],
+    'Hookah':              ['hookah','shisha','coal','charcoal'],
+    'Whiskey & Bourbon':   ['whiskey','bourbon','jager','hennessy','crown','jack','woodford','maker','jameson','remy'],
+    'Beer & Mixers':       ['beer','red bull','corona','bud','mich','sprite','coke','water','heineken'],
+    'Vodka':               ["tito","ketel","absolut","vodka"],
+    'Shots':               ['shot'],
+  };
+  const totals = {};
+  let grandTotal = 0;
+  sales.forEach(row=>{
+    const nameLow = row.name.toLowerCase();
+    let matched = false;
+    Object.entries(categories).forEach(([cat, keywords])=>{
+      if(!matched && keywords.some(kw=>nameLow.includes(kw))){
+        totals[cat] = (totals[cat]||0) + row.net;
+        grandTotal += row.net;
+        matched = true;
+      }
+    });
+    if(!matched){
+      totals['Other'] = (totals['Other']||0) + row.net;
+      grandTotal += row.net;
+    }
+  });
+
+  // Store for display
+  window._revenueBreakdown = {totals, grandTotal};
+  renderRevenueBreakdown();
+}
+
+function renderRevenueBreakdown(){
+  const rb = window._revenueBreakdown;
+  if(!rb || !rb.grandTotal) return;
+  const {totals, grandTotal} = rb;
+  const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const totalK = grandTotal>=1000 ? `$${(grandTotal/1000).toFixed(1)}K` : `$${Math.round(grandTotal)}`;
+
+  // Update stat card
+  const statVal = document.querySelector('.stat-card.s-neon .stat-val');
+  const statNote = document.querySelector('.stat-card.s-neon .stat-note');
+  if(statVal) statVal.textContent = totalK;
+  if(statNote) statNote.textContent = 'from uploaded CSV';
+
+  // Rebuild revenue bars
+  const revContainer = document.querySelector('[style*="rev-fill"]')?.closest('div[style*="background:var(--card)"]');
+  if(!revContainer) return;
+  let h='';
+  sorted.forEach(([cat, rev])=>{
+    const pct = Math.round((rev/grandTotal)*100);
+    const revFmt = rev>=1000?`$${(rev/1000).toFixed(1)}K`:`$${Math.round(rev)}`;
+    h+=`<div class="rev-bar"><div class="rev-bar-top"><span>${cat}</span><span>${revFmt} · ${pct}%</span></div><div class="rev-track"><div class="rev-fill" style="width:${pct}%"></div></div></div>`;
+  });
+  revContainer.innerHTML=h;
+}
+
+// ── SALES TABLE RENDER ────────────────────────────────────────
+function renderSalesTable(){
+  const container = document.getElementById('sales-table');
+  if(!container) return;
+  if(!salesData.length){
+    container.innerHTML='';
+    return;
+  }
+  const sorted = [...salesData].sort((a,b)=>b.gross-a.gross);
+  let h=`<div class="sec-hdr"><div class="sec-title">All Items — by Revenue</div><div class="sec-count">${sorted.length} items</div></div>`;
+  sorted.forEach(row=>{
+    const netFmt  = row.net>=0?`$${row.net.toFixed(2)}`:`-$${Math.abs(row.net).toFixed(2)}`;
+    const discPct = row.gross>0?Math.round(((row.gross-row.net)/row.gross)*100):0;
+    h+=`<div class="sales-row">
+      <div>
+        <div class="sales-name">${row.name}</div>
+        <div class="sales-meta">Qty: ${row.qty} · Gross: $${row.gross.toFixed(2)} · Avg/wk: ${row.avgWeek}${discPct>5?` · <span style="color:var(--orange)">⚠️ ${discPct}% discounted</span>`:''}</div>
+      </div>
+      <div class="sales-rev">${netFmt}</div>
+    </div>`;
+  });
+  container.innerHTML=h;
+}
+
+// ── VARIANCE TRACKING ─────────────────────────────────────────
+window.openVarianceModal = function(){
+  document.getElementById('vPeriod').value='';
+  document.getElementById('vAuthor').value='';
+  openModal('varianceModal');
+};
+
+window.confirmVariance = function(){
+  const period = document.getElementById('vPeriod').value.trim()||'Unknown period';
+  const author = document.getElementById('vAuthor').value.trim()||'Team';
+  closeModal('varianceModal');
+
+  // Take a snapshot of current on-hand counts + sales data
+  const snapshot = {};
+  Object.keys(inventory).forEach(catKey=>{
+    (inventory[catKey]||[]).forEach(item=>{
+      snapshot[item.id] = {
+        name: item.name,
+        cat: catKey,
+        onHand: item.onHand,
+        par: item.par,
+        avgWeek: item.avgWeek||0,
+      };
+    });
+  });
+
+  // Compare each item: expected = previous count - (avgWeek/5 * nights since last count)
+  // For now use avgWeek/7 * 7 (one week period) as expected usage
+  const TOLERANCE = 0.5; // half a bottle tolerance before flagging
+  const HIGH_FLAG = 2.0;  // 2+ bottles missing = high priority flag
+
+  const checks = Object.entries(snapshot).map(([id, item])=>{
+    if(!item.avgWeek || item.avgWeek === 0) return null;
+    const expectedUsage = item.avgWeek; // one week
+    const onHandNow = item.onHand;
+    // We can't know previous count without storing it, so flag items where
+    // on hand is MORE than 1 full par below what it should be based on weekly usage
+    const deficit = expectedUsage - onHandNow;
+    const variance = deficit > 0 ? deficit : 0;
+    let flag = 'ok';
+    if(variance >= HIGH_FLAG) flag='high';
+    else if(variance >= TOLERANCE) flag='med';
+    return { id, name:item.name, cat:item.cat, onHand:onHandNow, avgWeek:item.avgWeek, variance:Math.round(variance*100)/100, flag };
+  }).filter(Boolean);
+
+  const record = {
+    id: 'v'+Date.now(),
+    period, author,
+    date: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+    checks,
+    flagHigh: checks.filter(c=>c.flag==='high').length,
+    flagMed:  checks.filter(c=>c.flag==='med').length,
+    flagOk:   checks.filter(c=>c.flag==='ok').length,
+  };
+
+  varianceRecords.unshift(record);
+  renderVariance();
+  saveToFirebase();
+  showToast('Variance check saved');
+};
+
+function renderVariance(){
+  const summaryEl = document.getElementById('variance-summary');
+  const listEl    = document.getElementById('variance-list');
+  if(!varianceRecords.length){
+    summaryEl.innerHTML='';
+    listEl.innerHTML='<div class="empty"><div class="ico">📉</div><p>No variance records yet.<br>Upload sales data and run counts to start tracking.</p></div>';
+    return;
+  }
+
+  const latest = varianceRecords[0];
+
+  // Summary cards
+  summaryEl.innerHTML=`<div class="var-summary">
+    <div class="var-card ${latest.flagHigh?'flag':'ok'}">
+      <div class="var-num ${latest.flagHigh?'':''}"> ${latest.flagHigh}</div>
+      <div class="var-lbl">🔴 High Flag</div>
+    </div>
+    <div class="var-card">
+      <div class="var-num" style="color:var(--orange)">${latest.flagMed}</div>
+      <div class="var-lbl">🟠 Watch</div>
+    </div>
+    <div class="var-card ok">
+      <div class="var-num">${latest.flagOk}</div>
+      <div class="var-lbl">🟢 On Track</div>
+    </div>
+  </div>`;
+
+  // Records list — most recent first, sorted by flag severity
+  let h='';
+  varianceRecords.forEach((record, ri)=>{
+    const flagged = record.checks.filter(c=>c.flag!=='ok').sort((a,b)=>{
+      const o={high:0,med:1,ok:2};
+      return o[a.flag]-o[b.flag];
+    });
+    const all = record.checks.filter(c=>c.flag==='ok');
+
+    h+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--neon)">${record.period}</div>
+          <div style="font-size:11px;color:var(--muted)">${record.date} · ${record.author}</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--muted)">
+          <span style="color:var(--red);font-weight:600">${record.flagHigh} high</span> · 
+          <span style="color:var(--orange)">${record.flagMed} watch</span> · 
+          <span style="color:var(--green)">${record.flagOk} ok</span>
+        </div>
+      </div>`;
+
+    if(flagged.length){
+      h+=`<div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">Flagged Items</div>`;
+      flagged.forEach(c=>{
+        h+=`<div class="var-row flag-${c.flag}">
+          <div class="var-top">
+            <span class="var-name">${c.name}</span>
+            <span class="var-badge ${c.flag}">${c.flag==='high'?'🔴 Investigate':c.flag==='med'?'🟠 Watch':''}</span>
+          </div>
+          <div class="var-grid">
+            <div class="var-cell"><div class="var-cell-lbl">On Hand</div><div class="var-cell-val">${c.onHand}</div></div>
+            <div class="var-cell"><div class="var-cell-lbl">Avg/Week</div><div class="var-cell-val">${c.avgWeek}</div></div>
+            <div class="var-cell"><div class="var-cell-lbl">Gap</div><div class="var-cell-val negative">-${c.variance} btl</div></div>
+          </div>
+        </div>`;
+      });
+    } else {
+      h+=`<div style="color:var(--green);font-size:13px;text-align:center;padding:8px;">✓ No issues flagged this period</div>`;
+    }
+    h+=`</div>`;
+  });
+  listEl.innerHTML=h;
+}
+
+// ── TABS UPDATE ───────────────────────────────────────────────
 window.showTab=function(tab){
   document.querySelectorAll('[id^=tab-]').forEach(el=>el.classList.add('hidden'));
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.remove('hidden');
   document.querySelectorAll('.tab')[TAB_NAMES.indexOf(tab)]?.classList.add('active');
   if(CAT_LABELS[tab])renderCategory(tab);
-  if(tab==='dashboard')renderDashboard();
+  if(tab==='dashboard'){renderDashboard(); if(window._revenueBreakdown)renderRevenueBreakdown();}
   if(tab==='orders')renderOrders();
   if(tab==='log')renderLog();
+  if(tab==='variance')renderVariance();
+  if(tab==='sales'){renderSalesTable(); if(salesData.length){document.getElementById('upload-status').style.display='block';}}
 };
 
 window.showToast=function(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);};
